@@ -1,2 +1,2 @@
-# VERSION
-`10101`
+# Version
+`0.0.2-2.10.26-global`
