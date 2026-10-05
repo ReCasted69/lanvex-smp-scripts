@@ -1,0 +1,48 @@
+on join:
+    set join message to "<orange><bold>%player% <lime>joined the <magenta>game<lime>!"
+    play sound "block.note_block.pling" with pitch 1 to all players 
+    wait 5 ticks
+    play sound "block.note_block.pling" with pitch 2 to all players 
+    wait 1 second
+    if {sidebar.mode::%uuid of {_p}%} is not set:
+        set {sidebar.mode::%uuid of {_p}%} to "full"
+    if player's world is "world":
+        set player's display name to "<obfuscated><green>%player%"
+        set player's tab list name to "<obfuscated><green>%player%"
+    else if player's world is "world_nether":
+        set player's display name to "<obfuscated><red>%player%"
+        set player's tab list name to "<obfuscated><red>%player%"
+    else if player's world is "world_the_end":
+        set player's display name to "<obfuscated><purple>%player%"
+        set player's tab list name to "<obfuscated><purple>%player%"
+on leave:
+    set leave message to "<orange><bold>%player% <red>left the <magenta>game<red>..."
+    play sound "block.note_block.pling" with pitch 2 to all players 
+    wait 5 ticks
+    play sound "block.note_block.pling" with pitch 1 to all players 
+    if player's world is "world":
+        set player's display name to "<green>%player%"
+        set player's tab list name to "<green>%player%"
+    else if player's world is "world_nether":
+        set player's display name to "<red>%player%"
+        set player's tab list name to "<red>%player%"
+    else if player's world is "world_the_end":
+        set player's display name to "<purple>%player%"
+        set player's tab list name to "<purple>%player%"
+on world change:
+    wait 1 tick
+    
+    if player's world is "world":
+        set player's display name to "<green>%player%"
+        set player's tab list name to "<green>%player%"
+    else if player's world is "world_nether":
+        set player's display name to "<red>%player%"
+        set player's tab list name to "<red>%player%"
+    else if player's world is "world_the_end":
+        set player's display name to "<purple>%player%"
+        set player's tab list name to "<purple>%player%"
+on chat:
+    cancel event
+    sendChatMessage(player, message)
+on first join:
+    send "<green><bold>Welcome to the server! We recommend to lower your GUI scale for better experience." to player

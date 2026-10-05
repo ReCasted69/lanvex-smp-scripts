@@ -1,0 +1,82 @@
+on join:
+    set {_p} to player's uuid
+    set {_currentWorld} to name of player's world
+
+    # If joining directly into lobby, reset tracking
+    if {_currentWorld} is "lobby":
+        set {world::%{_p}%} to "lobby"
+        stop
+
+    # Check if reconnect timeout expired
+    set {_expired} to false
+
+    if {world.timer::%{_p}%} is set:
+        if difference between {world.timer::%{_p}%} and now > 5 minutes:
+            set {_expired} to true
+    else:
+        set {_expired} to true
+
+    if {world::%{_p}%} is not set:
+        set {_expired} to true
+
+    # Expired session -> lobby
+    if {_expired} is true:
+        set {world::%{_p}%} to "lobby"
+        delete {world.loc::%{_p}%}
+        teleport player to spawn of world "lobby"
+        stop
+
+    # Restore saved location
+    if {world.loc::%{_p}%} is set:
+        teleport player to {world.loc::%{_p}%}
+        stop
+
+    # No saved location -> world spawn
+    set {_targetWorld} to {world::%{_p}%} parsed as world
+
+    if {_targetWorld} is set:
+        teleport player to spawn of {_targetWorld}
+    else:
+        set {world::%{_p}%} to "lobby"
+        teleport player to spawn of world "lobby"
+
+on quit:
+    set {_p} to player's uuid
+    set {_world} to name of player's world
+
+    set {world.timer::%{_p}%} to now
+    set {world::%{_p}%} to {_world}
+
+    if {_world} is not "lobby":
+        set {world.loc::%{_p}%} to player's location
+    else:
+        delete {world.loc::%{_p}%}
+
+command /world [<text>]:
+    trigger:
+        if arg 1 is not set:
+            send "&cUsage: /world <worldname>" to player
+            stop
+
+        set {_p} to player's uuid
+        set {_input} to arg 1
+        set {_worldName} to "world" if {_input} is "survival" else {_input}
+        set {_targetWorld} to {_worldName} parsed as world
+
+        if {_targetWorld} is not set:
+            send "&cThat world does not exist." to player
+            stop
+
+        set {world::%{_p}%} to name of {_targetWorld}
+
+        # Restore last location in the selected world
+        if name of {_targetWorld} is not "lobby":
+            if {world.loc::%{_p}%} is set:
+                if world of {world.loc::%{_p}%} is {_targetWorld}:
+                    teleport player to {world.loc::%{_p}%}
+                    stop
+
+        teleport player to spawn of {_targetWorld}
+
+on tab complete of "/world":
+    set tab completions for position 1 to "lobby" and "survival"

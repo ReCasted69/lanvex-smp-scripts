@@ -1,0 +1,46 @@
+every 1 second:
+    loop all players:
+        set {ping.%loop-player%} to getPlayerPing(loop-player)
+        set {tps} to getTPS()
+        set {date} to getDate()
+        formatTablist("smth", loop-player)
+        if name of current inventory of loop-player is "<dark gray><bold>⚙ Settings <white>/ <reset><dark purple>Server":
+            set slot 1 of loop-player's current inventory to redstone block named "<orange>Server ticker (<lime>updated<orange>)" with lore "<gray>Shows your latency before you get fresh data.%nl%<gray>Updating every 1 second.%nl%<orange>Orange - not updated%nl%<red>Red - Updated"
+            wait 0.5 seconds
+            set slot 1 of loop-player's current inventory to orange stained glass pane named "<orange>Server ticker (<red>old<orange>)" with lore "<gray>Shows your latency before you get fresh data.%nl%<gray>Updating every 1 second.%nl%<orange>Orange - not updated%nl%<red>Red - Updated"
+            set slot 0 of loop-player's current inventory to loop-player's skull named "<gray>You" with lore "<gray>Nickname: <orange>%loop-player%%nl%<gray>UUID: <orange>%uuid of loop-player%%nl%<gray>IP: <orange>%loop-player's ip%%nl%<gray>Status: <lime>connected%nl%<gray>Ping: %getPlayerPing(loop-player)%<orange>ms"
+
+
+
+
+
+
+
+
+function formatTablist(mode: text, player: player):
+    set {_player}'s tab list header to formatted "%nl%%{visuals.servername}% %nl%<gray>Online: <yellow>%amount of players% <white>/ <yellow>%{visuals.maxonlineplayers}%%nl%<white><gray>TPS: %getTPS()%%nl%"
+    set {_player}'s tab list footer to formatted "%nl%<green>Join the <red>ꜱᴜʀᴠɪᴠᴀʟ<green> server!%nl%"
+
+function getPlayerPing(player: player):: text:
+    set {_ping} to {_player}'s ping
+    if {_ping} is less than 50:
+        return "<lime>%{_ping}%"
+    if {_ping} is more than 50:
+        return "<yellow>%{_ping}%"
+    if {_ping} is more than 100:
+        return "<orange>%{_ping}%"
+    if {_ping} is more than 200:
+        return "<red>%{_ping}%"
+function getTPS() :: text:
+    set {_tps} to tps from last 1 minute
+    if {_tps} is less than 10:
+        return "<red>%{_tps}%"
+    else if {_tps} is less than 15:
+        return "<orange>%{_tps}%"
+    else if {_tps} is less than 19.5:
+        return "<yellow>%{_tps}%"
+    else:
+        return "<lime>%{_tps}%"
+function getDate() :: text:
+    set {_date} to now formatted as "dd.MM.yyyy"
+    return {_date}

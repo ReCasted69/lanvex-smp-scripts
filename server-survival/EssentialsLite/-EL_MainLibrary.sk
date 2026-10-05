@@ -1,0 +1,271 @@
+on load:
+    if {infobase::features::*} is not set:
+        set {infobase::features::music} to true
+        set {infobase::features::home} to true
+        set {infobase::features::kms} to true
+        set {infobase::features::afk} to true
+
+function validateSystem() :: text:
+    return "success"
+function featureToggle(feature: text, state: boolean, mode: text) :: text:
+    if {_mode} is "all":
+        loop {infobase::features::*}:
+            set {feature::%loop-index%} to {_state}
+        return "success"
+
+    else if {_mode} is "once":
+        if {infobase::features::%{_feature}%} is set:
+            set {feature::%{_feature}%} to {_state}
+            return "success"
+        else:
+            return "error_1"
+            
+    return "error_2"
+
+function serverBan(p: offlineplayer, reason: text, duration: timespan) :: text:
+    if {_p} is banned:
+        return "error_1"
+
+    if {_duration} is set:
+        set {_dText} to "%{_duration}%"
+    else:
+        set {_dText} to "forever"
+    set {_msg} to "%nl%&c&l<underline>BANNED&r%nl%%nl%&7Reason: &f%{_reason}%%nl%&7Duration: &f%{_dText}%%nl%%nl%&8Appeal at &7%{discord_link}%"
+
+    if {_duration} is set:
+        ban and kick {_p} due to {_msg} for {_duration}
+    else:
+        ban and kick {_p} due to {_msg}
+    
+    return "success"
+
+
+
+function serverUnban(p: offlineplayer) :: text:
+    if {_p} is not banned:
+        return "error_1"
+    unban {_p}
+    return "success"
+
+function serverKick(p: player, reason: text) :: text:
+    if {_p} is not online:
+        return "error_1"
+    if {_reason} is set:
+        kick {_p} due to ""
+    else:
+        set {_reason} to "No reason specified"
+        kick {_p} due to "%nl%<orange><underline>&lKICKED&r%nl%%nl%&7Reason: &f%{_reason}%"
+    return "success"
+
+function killPlayer(target: text, mode: text) :: text:
+    if {_mode} is "player":
+        set {_p} to {_target} parsed as player
+        if {_p} is not set:
+            return "error_1"
+        if {afk::%uuid of {_p}%} is set:
+            return "error_afk"
+        kill {_p}
+        return "success"
+
+    else if {_mode} is "all_players":
+        loop all players:
+            if {afk::%uuid of loop-player%} is not set:
+                kill loop-player
+        return "success"
+
+    else if {_mode} is "mobs":
+        kill all mobs
+        return "success"
+
+    else if {_mode} is "everything":
+        kill all entities and players
+        return "success"
+
+    return "error_2"
+
+function setJail(loc: location) :: text:
+    if {jail.location} is set:
+        return "error_1"
+    set {jail.location} to {_loc}
+    return "success"
+
+function deleteJail() :: text:
+    if {jail.location} is not set:
+        return "error_1"
+    delete {jail.location}
+    return "success"
+
+function jailPlayer(p: player) :: text:
+    if {jail.location} is not set:
+        return "error_1"
+    if {jail.jailed::%uuid of {_p}%} is true:
+        return "error_2"
+    set {jail.unjail::%uuid of {_p}%} to location of {_p}
+    set {jail.jailed::%uuid of {_p}%} to true
+    teleport {_p} to {jail.location}
+
+
+function unjailPlayer(p: player) :: text:
+    if {jail.jailed::%uuid of {_p}%} is not set:
+        return "error_1"
+    else if {jail.jailed::%uuid of {_p}%} is false:
+        return "error_1"
+    teleport {_p} to {jail.unjail::%uuid of {_p}%}
+    delete {jail.jailed::%uuid of {_p}%}
+    delete {jail.unjail::%uuid of {_p}%}
+
+function serverInvsee(exe: player, target: player) :: text:
+    if {_exe} is not set:
+        return "error_1"
+    if {_target} is not online:
+        return "error_2"
+    set {_return} to "success"
+    open inventory of {_target} to {_exe}
+    return {_return}
+
+
+
+function serverPower(action: text, reason: text):
+    if {_reason} is set:
+        loop all players:
+            kick loop-player due to {_reason}
+    loop all players:
+        wait 1 tick
+        if {_action} is "stop":
+            stop server
+            kick loop-player due to "<red>Server shutting down"
+        else if {_action} is "restart":
+            kick loop-player due to "<orange>Server restarting"
+            restart server
+
+function clearPlayerIP(p: offlineplayer) :: text:
+    if {ip.player.security::%uuid of {_p}%} is not set:
+        return "error_1" 
+    delete {ip.player.security::%uuid of {_p}%}
+    set {_return} to "success"
+    if {_p} is online:
+        set {_k} to serverKick({_p}, "Your IP has been cleared; please rejoin.")
+    return {_return}
+
+function addPlayerIP(p: offlineplayer) :: text:
+    delete {ip.player.security::%uuid of {_p}%}
+    set {ip.player.security::%uuid of {_p}%} to ip of {_p}
+    
+    set {_return} to "success"
+    if {_p} is online:
+        set {_k} to serverKick({_p}, "Your IP has been registered; please rejoin.")
+    return {_return}
+
+function validatePlayerIP(p: offlineplayer) :: text:
+    if {ip.player.security::%uuid of {_p}%} is not set:
+        set {ip.player.security::%uuid of {_p}%} to ip of {_p}
+        return "warning_1"
+    else:
+        if ip of {_p} is not {ip.player.security::%uuid of {_p}%}:
+            return "error_1"
+        else:
+            return "success"
+
+function setSpawn(loc: location, p: player) :: text:
+    if {_loc} is not set:
+        return "error_1"
+    if {_loc} is not set:
+        return "error_2"
+    set {spawn.location} to {_loc}
+    set spawn location of world of {_p} to {_loc}
+    if {change_gamerules} is true:
+        execute console command "gamerule respawn_radius 0"
+    else:
+        return "warning_1"
+    return "success"
+
+function deleteSpawn() :: text:
+    if {spawn.location} is set:
+        delete {spawn.location}
+        return "success"
+    else:
+        return "error_1"
+
+function statisticsWrite(feature: text):
+    if {_feature} is "ban":
+        add 1 to {statisitics.feature::ban}
+    if {_feature} is "unban":
+        add 1 to {statisitics.feature::unban}
+    if {_feature} is "kick":
+        add 1 to {statisitics.feature::kick}
+    if {_feature} is "kill":
+        add 1 to {statisitics.feature::kill}
+    if {_feature} is "kick":
+        add 1 to {statisitics.feature::kick}
+
+function setHome(p: player, name: text, loc: location) :: text:
+    if {feature::home} is false:
+        return "error_1"
+    set {home.homes::%uuid of {_p}%::%{_name}%} to {_loc}
+    return "success"
+
+function deleteHome(p: player, name: text) :: text:
+    if {feature::home} is false:
+        return "error_1"
+    if {home.homes::%uuid of {_p}%::%{_name}%} is set:
+        delete {home.homes::%uuid of {_p}%::%{_name}%}
+        return "success"
+    else:
+        return "error_2"
+
+function homeTeleport(p: player, name: text) :: text:
+    if {feature::home} is false:
+        return "error_1"
+    if {home.homes::%uuid of {_p}%::%{_name}%} is set:
+        teleport {_p} to {home.homes::%uuid of {_p}%::%{_name}%}
+
+function playTitle(title: text, subtitle: text, p: player, timespan: timespan, fade-in: timespan = 0 seconds, fade-out: timespan = 0 seconds):
+    set {_t} to colored {_title}
+    set {_s} to colored {_subtitle}
+    if {_timespan} is not set:
+        set {_timespan} to 3 seconds
+    if {_t} is set:
+        if {_s} is set:
+            send title "%{_t}%" with subtitle "%{_s}%" to {_p} for {_timespan} with fade in {_fade-in} and fade out {_fade-out}
+        else:
+            send title "%{_t}%" to {_p} for {_timespan} with fade in {_fade-in} and fade out {_fade-out}
+        
+function playerKMS(p: player) :: text:
+    if {feature::kms} is true:
+        set {kms.death.%uuid of {_p}%} to true
+        wait 0.5 seconds
+        strike lightning effect at {_p}
+        kill {_p}
+    else:
+        return "error_1"
+
+function playMusic(m: text, p: player):
+    if {_m} is "stop":
+        send "{@prefix} <lime>Stopped all sounds" to {_p}
+        stop all sounds for {_p}
+        stop
+    play sound "music_disc.%{_m}%" in record category with volume 100 and pitch 1 to {_p} at {_p}'s head
+function teamClear(p: player):
+    execute console command "team leave %{_p}%"
+
+function rndPlayer() :: player:
+    set {_result} to a random element of all players
+    return {_result}
+
+function rndShufflePlayersToTeams(teamNames: texts):
+    delete {teams::*}
+    
+    set {_players::*} to all players
+    set {_players::*} to a random element out of {_players::*}
+    set {_teamCount} to size of {_teamNames::*}
+    if {_teamCount} is 0:
+        stop
+        
+    set {_index} to 1
+    loop {_players::*}:
+        set {_currentTeam} to {_teamNames::%{_index}%}
+        add loop-value to {teams::%{_currentTeam}%::*}
+        
+        add 1 to {_index}
+        if {_index} > {_teamCount}:
+            set {_index} to 1

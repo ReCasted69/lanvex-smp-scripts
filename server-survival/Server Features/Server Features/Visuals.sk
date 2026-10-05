@@ -1,0 +1,91 @@
+every 1 second:
+    loop all players:
+        set {ping.%loop-player%} to getPlayerPing(loop-player)
+        set {tps} to getTPS()
+        set {date} to getDate()
+        formatSidebar(loop-player, {ping.%loop-player%}, {tps}, {time}, {date})
+        formatTablist("smth", loop-player)
+        if name of current inventory of loop-player is "<dark gray><bold>⚙ Settings <white>/ <reset><dark purple>Server":
+            set slot 1 of loop-player's current inventory to redstone block named "<orange>Server ticker (<lime>updated<orange>)" with lore "<gray>Shows your latency before you get fresh data.%nl%<gray>Updating every 1 second.%nl%<orange>Orange - not updated%nl%<red>Red - Updated"
+            wait 0.5 seconds
+            set slot 1 of loop-player's current inventory to orange stained glass pane named "<orange>Server ticker (<red>old<orange>)" with lore "<gray>Shows your latency before you get fresh data.%nl%<gray>Updating every 1 second.%nl%<orange>Orange - not updated%nl%<red>Red - Updated"
+            set slot 0 of loop-player's current inventory to loop-player's skull named "<gray>You" with lore "<gray>Nickname: <orange>%loop-player%%nl%<gray>UUID: <orange>%uuid of loop-player%%nl%<gray>IP: <orange>%loop-player's ip%%nl%<gray>Status: <lime>connected%nl%<gray>Ping: %getPlayerPing(loop-player)%<orange>ms"
+
+
+
+
+
+
+function formatSidebar(player: player, ping: text, tps: text, time: text, date: text):
+    set {_mode} to {sidebar::mode::%uuid of {_player}%}
+
+    if {_mode} is "none":
+        clear {_player}'s fastboard
+        stop
+
+    else if {_mode} is "partial":
+        if {mode.sidebar::%uuid of {_player}%} is not "partial":
+            set {mode.sidebar::%uuid of {_player}%} to "partial"
+            clear {_player}'s fastboard
+
+        set title of {_player}'s fastboard to formatted "%{visuals.servername}%"
+        set line 3 of {_player}'s fastboard to formatted "<white>Online: <yellow>%amount of players% <white>/ <yellow>%{visuals.maxonlineplayers}%"
+        set line 4 of {_player}'s fastboard to formatted ""
+        set line 5 of {_player}'s fastboard to formatted "<dark gray>Ping: %{_ping}%<gray>ms"
+        set line 6 of {_player}'s fastboard to formatted "<dark gray>TPS: %{_tps}%"
+        set line 9 of {_player}'s fastboard to formatted "%{visuals.announcementtitle}%"
+        set line 10 of {_player}'s fastboard to formatted "%{visuals.announcementtext}%"
+
+    else if {_mode} is "full":
+        if {mode.sidebar::%uuid of {_player}%} is not "full":
+            set {mode.sidebar::%uuid of {_player}%} to "full"
+            clear {_player}'s fastboard
+
+        set title of {_player}'s fastboard to formatted "%{visuals.servername}%"
+        set line 1 of {_player}'s fastboard to formatted "<dark gray><bold>─────────────<reset>"
+        set line 2 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> <orange>Playing on %{visuals.servericon}%"
+        set line 3 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> <gray>%{_date}%"
+        set line 4 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> <white>Online: <yellow>%amount of players% <white>/ <yellow>%{visuals.maxonlineplayers}%"
+        set line 5 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset>"
+        set line 6 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> Ping: %{_ping}%<gray>ms"
+        set line 7 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> TPS: %{_tps}%"
+        set line 8 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset>"
+        set line 9 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset>"
+        set line 10 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> %{visuals.announcementtitle}%"
+        set line 11 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset> %{visuals.announcementtext}%"
+        set line 12 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset>"
+
+        if {sidebar::showip::%uuid of {_player}%} is true:
+            set line 13 of {_player}'s fastboard to formatted "<dark gray><bold>|<reset>   <dark gray>IP: %{_player}'s ip%"
+            set line 14 of {_player}'s fastboard to formatted "<dark gray><bold>─────────────<reset>"
+        else:
+            set line 13 of {_player}'s fastboard to formatted "<dark gray><bold>─────────────<reset>"
+            clear line 14 of {_player}'s fastboard
+
+function formatTablist(mode: text, player: player):
+    set {_player}'s tab list header to formatted "%nl%  %{visuals.servername}%  %nl%<gray>Online: <yellow>%amount of players% <white>/ <yellow>%{visuals.maxonlineplayers}%%nl%<white><gray>TPS: %getTPS()%%nl%"
+    set {_player}'s tab list footer to formatted "%nl%<green>%nl%"
+
+function getPlayerPing(player: player):: text:
+    set {_ping} to {_player}'s ping
+    if {_ping} is less than 50:
+        return "<lime>%{_ping}%"
+    if {_ping} is more than 50:
+        return "<yellow>%{_ping}%"
+    if {_ping} is more than 100:
+        return "<orange>%{_ping}%"
+    if {_ping} is more than 200:
+        return "<red>%{_ping}%"
+function getTPS() :: text:
+    set {_tps} to tps from last 1 minute
+    if {_tps} is less than 10:
+        return "<red>%{_tps}%"
+    else if {_tps} is less than 15:
+        return "<orange>%{_tps}%"
+    else if {_tps} is less than 19.5:
+        return "<yellow>%{_tps}%"
+    else:
+        return "<lime>%{_tps}%"
+function getDate() :: text:
+    set {_date} to now formatted as "dd.MM.yyyy"
+    return {_date}

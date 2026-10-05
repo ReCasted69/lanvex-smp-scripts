@@ -1,0 +1,25 @@
+
+on join:
+    if {sidebar::mode::%uuid of player%} is not set:
+        set {sidebar::mode::%uuid of player%} to "full"
+
+    if {sidebar::showip::%uuid of player%} is not set:
+        set {sidebar::showip::%uuid of player%} to false
+
+
+command /about:
+    trigger:
+        aboutGUI(player)
+
+
+function aboutGUI(p: player):
+    set {_gui} to chest inventory with 3 rows named "<dark purple><bold>About %{visuals.servername}%"
+    fillGUI({_gui}, 3, gray stained glass pane named " ")
+    set slot 13 of {_gui} to end crystal named "%{visuals.servername}%" with lore "<gray>Server version: %nl%%{version}%"
+    set slot 18 of {_gui} to yellow shulker box named "<white>Powered with <yellow><bold><italic>Skript" with lore "<gray>All features, including this GUI, are made with Skript."
+    open {_gui} to {_p}
+
+on inventory click:
+    if name of current inventory of player is "<dark purple><bold>About %{visuals.servername}%":
+        cancel event
+

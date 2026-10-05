@@ -1,0 +1,207 @@
+function generateID() :: text:
+    set {_chars::*} to "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890" split at ""
+    set {_id} to ""
+    loop 10 times:
+        set {_id} to "%{_id}%%random element out of {_chars::*}%"
+    return {_id}
+function format_num(n: number) :: text:
+    set {_t} to "%{_n}%"
+    set {_split::*} to {_t} split at "."
+    if {_split::2} is set:
+        set {_decimal} to first 1 characters of {_split::2}
+        return "%{_split::1}%.%{_decimal}%"
+    return "%{_split::1}%"
+function formatText(msg: text) :: text:
+    # Classic faces
+    replace all ":)" with "😀" in {_msg}
+    replace all ":-)" with "😀" in {_msg}
+    replace all ":D" with "😃" in {_msg}
+    replace all ":-D" with "😃" in {_msg}
+    replace all "=D" with "😃" in {_msg}
+    replace all ";)" with "😉" in {_msg}
+    replace all ";-)" with "😉" in {_msg}
+    replace all ":P" with "😛" in {_msg}
+    replace all ":-P" with "😛" in {_msg}
+    replace all ":p" with "😛" in {_msg}
+    replace all ":-p" with "😛" in {_msg}
+
+    # Emoji
+    replace all ":smile:" with "😀" in {_msg}
+    replace all ":happy:" with "😀" in {_msg}
+    replace all ":smiley:" with "😃" in {_msg}
+    replace all ":grin:" with "😁" in {_msg}
+    replace all ":laughing:" with "😆" in {_msg}
+    replace all ":sweat_smile:" with "😅" in {_msg}
+    replace all ":rofl:" with "🤣" in {_msg}
+    replace all ":joy:" with "😂" in {_msg}
+    replace all ":wink:" with "😉" in {_msg}
+    replace all ":cool:" with "😎" in {_msg}
+    replace all ":sunglasses:" with "😎" in {_msg}
+    replace all ":thinking:" with "🤔" in {_msg}
+    replace all ":think:" with "🤔" in {_msg}
+    replace all ":confused:" with "😕" in {_msg}
+    replace all ":hmm:" with "🤨" in {_msg}
+    replace all ":shrug:" with "🤷" in {_msg}
+    replace all ":scream:" with "😱" in {_msg}
+    replace all ":fear:" with "😨" in {_msg}
+    replace all ":shocked:" with "😲" in {_msg}
+    replace all ":surprised:" with "😮" in {_msg}
+    replace all ":wow:" with "😮" in {_msg}
+    replace all ":angry:" with "😠" in {_msg}
+    replace all ":mad:" with "😡" in {_msg}
+    replace all ":rage:" with "😡" in {_msg}
+    replace all ":annoyed:" with "😒" in {_msg}
+
+    # Sad
+    replace all ":(" with "😢" in {_msg}
+    replace all ":-(" with "😢" in {_msg}
+    replace all ":sad:" with "😢" in {_msg}
+    replace all ":cry:" with "😢" in {_msg}
+    replace all ":sob:" with "😭" in {_msg}
+    replace all ":tears:" with "😭" in {_msg}
+    replace all ":disappointed:" with "😞" in {_msg}
+
+    # Love
+    replace all "<3" with "❤️" in {_msg}
+    replace all ":heart:" with "❤️" in {_msg}
+    replace all ":love:" with "❤️" in {_msg}
+    replace all ":red_heart:" with "❤️" in {_msg}
+    replace all ":heart_eyes:" with "😍" in {_msg}
+    replace all ":kissing_heart:" with "😘" in {_msg}
+    replace all ":kiss:" with "💋" in {_msg}
+
+    # Funny
+    replace all ":clown:" with "🤡" in {_msg}
+    replace all ":skull:" with "💀" in {_msg}
+    replace all ":dead:" with "💀" in {_msg}
+    replace all ":xd:" with "🤣" in {_msg}
+    replace all "xD" with "🤣" in {_msg}
+    replace all ":nerd:" with "🤓" in {_msg}
+    replace all ":sus:" with "🧐" in {_msg}
+    replace all ":suspicious:" with "🧐" in {_msg}
+
+    # Gestures
+    replace all ":thumbsup:" with "👍" in {_msg}
+    replace all ":thumbs_up:" with "👍" in {_msg}
+    replace all ":like:" with "👍" in {_msg}
+    replace all ":+1:" with "👍" in {_msg}
+    replace all ":thumbsdown:" with "👎" in {_msg}
+    replace all ":thumbs_down:" with "👎" in {_msg}
+    replace all ":-1:" with "👎" in {_msg}
+    replace all ":clap:" with "👏" in {_msg}
+    replace all ":wave:" with "👋" in {_msg}
+    replace all ":ok:" with "👌" in {_msg}
+    replace all ":peace:" with "✌️" in {_msg}
+    replace all ":pray:" with "🙏" in {_msg}
+    replace all ":muscle:" with "💪" in {_msg}
+    replace all ":fist:" with "✊" in {_msg}
+    replace all ":point_up:" with "☝️" in {_msg}
+
+    # Symbols
+    replace all ":fire:" with "🔥" in {_msg}
+    replace all ":flame:" with "🔥" in {_msg}
+    replace all ":star:" with "⭐" in {_msg}
+    replace all ":sparkles:" with "✨" in {_msg}
+    replace all ":zap:" with "⚡" in {_msg}
+    replace all ":boom:" with "💥" in {_msg}
+    replace all ":100:" with "💯" in {_msg}
+    replace all ":check:" with "✅" in {_msg}
+    replace all ":yes:" with "✅" in {_msg}
+    replace all ":no:" with "❌" in {_msg}
+    replace all ":x:" with "❌" in {_msg}
+    replace all ":warning:" with "⚠️" in {_msg}
+    replace all ":question:" with "❓" in {_msg}
+    replace all ":exclamation:" with "❗" in {_msg}
+    replace all ":info:" with "ℹ️" in {_msg}
+
+    # Eyes / mouth
+    replace all ":eyes:" with "👀" in {_msg}
+    replace all ":eye:" with "👁️" in {_msg}
+    replace all ":mouth:" with "👄" in {_msg}
+    replace all ":zipper:" with "🤐" in {_msg}
+    replace all ":shush:" with "🤫" in {_msg}
+    replace all ":smirk:" with "😏" in {_msg}
+    replace all ":expressionless:" with "😑" in {_msg}
+    replace all ":neutral:" with "😐" in {_msg}
+
+    # Animals
+    replace all ":dog:" with "🐶" in {_msg}
+    replace all ":cat:" with "🐱" in {_msg}
+    replace all ":fox:" with "🦊" in {_msg}
+    replace all ":wolf:" with "🐺" in {_msg}
+    replace all ":bear:" with "🐻" in {_msg}
+    replace all ":panda:" with "🐼" in {_msg}
+    replace all ":frog:" with "🐸" in {_msg}
+    replace all ":monkey:" with "🐒" in {_msg}
+    replace all ":penguin:" with "🐧" in {_msg}
+    replace all ":chicken:" with "🐔" in {_msg}
+    replace all ":bee:" with "🐝" in {_msg}
+    replace all ":bug:" with "🐛" in {_msg}
+
+    # Food
+    replace all ":pizza:" with "🍕" in {_msg}
+    replace all ":burger:" with "🍔" in {_msg}
+    replace all ":fries:" with "🍟" in {_msg}
+    replace all ":apple:" with "🍎" in {_msg}
+    replace all ":banana:" with "🍌" in {_msg}
+    replace all ":watermelon:" with "🍉" in {_msg}
+    replace all ":cake:" with "🎂" in {_msg}
+    replace all ":cookie:" with "🍪" in {_msg}
+    replace all ":coffee:" with "☕" in {_msg}
+
+    # Minecraft
+    replace all ":creeper:" with "🟩" in {_msg}
+    replace all ":diamond:" with "💎" in {_msg}
+    replace all ":pickaxe:" with "⛏️" in {_msg}
+    replace all ":sword:" with "⚔️" in {_msg}
+    replace all ":shield:" with "🛡️" in {_msg}
+    replace all ":tnt:" with "💣" in {_msg}
+
+    return {_msg}
+
+
+function censorText(msg: text) :: text:
+    set {_badwords::*} to "fuck", "fucking", "fucked", "fucker", "motherfuck", "shit", "shitty", "bullshit", "bitch", "bitches", "bitching", "asshole", "assholes", "dumbass", "jackass", "bastard", "damn", "dammit", "crap", "piss", "pissed", "dick", "dicks", "dickhead", "cock", "cocks", "cocksucker", "pussy", "slut", "whore", "hoe", "twat", "cunt", "wanker", "jerkoff", "dipshit", "shithead", "fuckhead", "asshat", "arsehole", "bollocks" and "bugger"
+
+    loop {_badwords::*}:
+        replace all loop-value with "****" in {_msg}
+
+    return {_msg}
+
+
+function formatMessage(p: player, msg: text) :: text:
+    set {_msg} to formatText({_msg})
+    set {_msg} to censorText({_msg})
+
+    loop all players:
+        if {_msg} contains loop-player's name:
+            replace all loop-player's name with "<orange><underline>@%loop-player's name%<reset>" in {_msg}
+
+            if loop-player is not {_p}:
+                play sound "block.note_block.bit" with pitch 1.5 to loop-player
+
+    if {_msg} contains "@everyone":
+        replace all "@everyone" with "<orange><underline>@everyone<reset>" in {_msg}
+        play sound "block.note_block.bit" with pitch 1.2 to all players
+
+    else if {_msg} contains "@all":
+        replace all "@all" with "<orange><underline>@all<reset>" in {_msg}
+        play sound "block.note_block.bit" with pitch 1.2 to all players
+
+    if {_msg} contains "@time":
+        set {_date} to formatted now as "MM/dd/yyyy"
+        set {_time} to formatted now as "HH:mm:ss"
+        replace all "@time" with "<orange><underline>%{_date}%<gray>, <orange>%{_time}%<reset>" in {_msg}
+    return {_msg}
+function sendChatMessage(p: player, msg: text):
+    set {_msg} to formatted formatMessage({_p}, {_msg})
+    set {_rank} to setPlayerRank({_p})
+    broadcast "%{_rank}%: %{_msg}%"
+function setPlayerRank(p: player):: text:
+    if {_p}'s name is {ownername}:
+        return "<dark gray><<purple><bold><italic>ᴏᴡɴᴇʀ<dark gray>><<orange>%{_p}%<dark gray>><reset>"
+    else if {_p} is op:
+        return "<dark gray><<light red>OP<dark gray>><<orange>%{_p}%<dark gray>><reset>"
+    else:
+        return "<dark gray><<orange>%{_p}%<dark gray>><reset>"
+

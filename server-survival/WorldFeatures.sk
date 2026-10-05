@@ -1,0 +1,143 @@
+options:
+    required-players: 15
+    
+    end-world: world_the_end
+    spawn-world: world
+
+on load:
+    if {end.dragon-killed} is not set:
+        set {end.dragon-killed} to false
+
+    if {end.open} is not set:
+        set {end.open} to false
+
+
+# ==========================================
+# PLAYER COUNT CHECK
+# ==========================================
+
+every 5 seconds:
+    if {end.dragon-killed} is true:
+        if {end.open} is false:
+            set {end.open} to true
+        stop
+
+    if number of all players >= {@required-players}:
+        if {end.open} is false:
+            set {end.open} to true
+
+            broadcast ""
+            broadcast "&5&lTHE END IS NOW OPEN"
+            broadcast "&dThere are enough players online to enter the End."
+            broadcast ""
+
+            play sound "entity.enderman.teleport" with volume 2 and pitch 0.6 to all players
+            play sound "block.end_portal.spawn" with volume 1 and pitch 1 to all players
+
+
+
+    else:
+        if {end.open} is true:
+            set {end.open} to false
+
+            broadcast ""
+            broadcast "&c&lTHE END HAS CLOSED"
+            broadcast "&7There are no longer enough players online."
+            broadcast ""
+
+            play sound "block.end_portal.deactivate" with volume 1.5 and pitch 0.7 to all players
+            play sound "entity.enderman.teleport" with volume 1.5 and pitch 0.4 to all players
+
+            loop all players:
+                if name of world of loop-player is "{@end-world}":
+                    teleport loop-player to spawn location of world "{@spawn-world}"
+
+                    send "&c&lTHE END IS CLOSED" to loop-player
+                    send "&7You have been returned to spawn." to loop-player
+
+                    play sound "entity.enderman.teleport" with volume 2 and pitch 0.5 to loop-player
+
+
+# ==========================================
+# BLOCK ENTRY TO CLOSED END
+# ==========================================
+
+on teleport:
+    if {end.dragon-killed} is true:
+        stop
+
+    if {end.open} is true:
+        stop
+
+    if name of world of event-location is "{@end-world}":
+        cancel event
+
+        send "&c&lTHE END IS CLOSED" to player
+        send "&7At least &f{@required-players} &7players must be online." to player
+
+        play sound "block.note_block.bass" with volume 1 and pitch 0.5 to player
+
+
+# ==========================================
+# ENDER DRAGON DEATH
+# ==========================================
+
+on death of ender dragon:
+    set {end.dragon-killed} to true
+    set {end.open} to true
+
+    broadcast ""
+    broadcast "&5&l✦ THE ENDER DRAGON HAS BEEN DEFEATED ✦"
+    broadcast "&dThe End is now permanently accessible."
+    broadcast ""
+
+    play sound "ui.toast.challenge_complete" with volume 2 and pitch 1 to all players
+    play sound "entity.ender_dragon.death" with volume 2 and pitch 1 to all players
+
+
+# ==========================================
+# END STATUS COMMAND
+# ==========================================
+
+command /endstatus:
+    trigger:
+        if {end.dragon-killed} is true:
+            send "&5&lTHE END"
+            send "&7Status: &aPermanently Open"
+            send "&7The Ender Dragon has been defeated."
+            stop
+
+        if {end.open} is true:
+            send "&5&lTHE END"
+            send "&7Status: &aOpen"
+            send "&7Players online: &f%number of all players%"
+            send "&7Required: &f{@required-players}"
+        else:
+            send "&5&lTHE END"
+            send "&7Status: &cClosed"
+            send "&7Players online: &f%number of all players%"
+            send "&7Required: &f{@required-players}"
+
+
+# ==========================================
+# RESET END EVENT
+# ==========================================
+
+command /endreset:
+    permission: op
+    trigger:
+        set {end.dragon-killed} to false
+        set {end.open} to false
+
+        broadcast ""
+        broadcast "&c&lTHE END EVENT HAS BEEN RESET"
+        broadcast "&7The End once again requires &f{@required-players} &7players."
+        broadcast ""
+
+        play sound "block.end_portal.deactivate" with volume 1.5 and pitch 0.6 to all players
+
+        if number of all players >= {@required-players}:
+            set {end.open} to true
+
+            broadcast "&5&lTHE END IS NOW OPEN"
+            play sound "block.end_portal.spawn" with volume 1.5 and pitch 1 to all players

@@ -1,0 +1,146 @@
+
+on join:
+    if {sidebar::mode::%uuid of player%} is not set:
+        set {sidebar::mode::%uuid of player%} to "full"
+
+    if {sidebar::showip::%uuid of player%} is not set:
+        set {sidebar::showip::%uuid of player%} to false
+
+
+command /settings:
+    trigger:
+        settingsGUI(player)
+
+
+function settingsGUI(p: player):
+    set {_gui} to chest inventory with 4 rows named "<dark gray><bold>⚙ Settings"
+    fillGUI({_gui}, 4, gray stained glass pane named " ")
+    set slot 0 of {_gui} to {_p}'s skull named "<gray>Your Profile" with lore "%nl%<yellow><bold>%{_p}'s name%%nl%%nl%<yellow>IP: <gray>%{_p}'s ip%%nl%<orange>UUID: <gray>%uuid of {_p}%"
+    set slot 8 of {_gui} to crimson sign named "<yellow>Settings GUI is in-Dev" with lore "<red>Version %{version}%%nl%<dark red>Expect bugs!"
+    set slot 35 of {_gui} to barrier block named "<dark red>Close" with lore " "
+    set slot 10 of {_gui} to brush named "<lime>Visuals"
+    set slot 11 of {_gui} to repeating command block named "<dark purple>Server"
+    open {_gui} to {_p}
+function settingsGUIvisuals(p: player):
+    set {_gui} to chest inventory with 4 rows named "<dark gray><bold>⚙ Settings <white>/ <reset><lime>Visuals"
+    fillGUI({_gui}, 4, gray stained glass pane named " ")
+    settingsButtonSidebar({_p}, {_gui})
+    settingsButtonShowIP({_p}, {_gui})
+    set slot 35 of {_gui} to barrier block named "<dark red>Close" with lore " "
+    set slot 34 of {_gui} to ender eye named "<white>Back to the main menu"
+    open {_gui} to {_p}
+function settingsGUIserver(p: player):
+    set {_gui} to chest inventory with 2 rows named "<dark gray><bold>⚙ Settings <white>/ <reset><dark purple>Server"
+    fillGUI({_gui}, 2, gray stained glass pane named " ")
+    set slot 0 of {_gui} to {_p}'s skull named "<gray>You" with lore "<gray>Nickname: <orange>%{_p}%%nl%<gray>UUID: <orange>%uuid of {_p}%%nl%<gray>IP: <orange>%{_p}'s ip%%nl%<gray>Status: <lime>connected%nl%<gray>Ping: %getPlayerPing({_p})%<orange>ms"
+    set slot 17 of {_gui} to barrier block named "<dark red>Close" with lore " "
+    set slot 16 of {_gui} to ender eye named "<white>Back to the main menu"
+    open {_gui} to {_p}
+
+
+# ============================================================
+# BUTTON UPDATE FUNCTIONS
+# ============================================================
+
+function settingsButtonSidebar(p: player, gui: inventory):
+    set {_mode} to {sidebar::mode::%uuid of {_p}%}
+    if {_mode} is "none":
+        set {_item} to red dye
+        set {_text} to "<white><bold>-> <red>Invisible"
+    else if {_mode} is "partial":
+        set {_item} to yellow dye
+        set {_text} to "<white><bold>-> <yellow>Slim"
+    else:
+        set {_item} to lime dye
+        set {_text} to "<white><bold>-> <green>Full"
+    set slot 10 of {_gui} to {_item} named "<orange>Sidebar Size" with lore "%{_text}%%nl%<dark gray>Invisible / Partial / Full"
+
+
+function settingsButtonShowIP(p: player, gui: inventory):
+    if {sidebar::showip::%uuid of {_p}%} is false:
+        set {_item} to lever
+        set {_text} to "<white><bold>-> <red>Invisible"
+    else:
+        set {_item} to redstone torch
+        set {_text} to "<white><bold>-> <green>Visible"
+
+    set slot 11 of {_gui} to {_item} named "<red>IP adress visibility" with lore "%{_text}%%nl%<dark gray>Invisible / Visible"
+
+
+# ============================================================
+# BUTTON ACTION FUNCTIONS
+# ============================================================
+
+function settingsClickSidebar(p: player):
+    if {sidebar::mode::%uuid of {_p}%} is "none":
+        set {sidebar::mode::%uuid of {_p}%} to "partial"
+
+    else if {sidebar::mode::%uuid of {_p}%} is "partial":
+        set {sidebar::mode::%uuid of {_p}%} to "full"
+
+    else:
+        set {sidebar::mode::%uuid of {_p}%} to "none"
+
+    settingsButtonSidebar({_p}, current inventory of {_p})
+
+
+function settingsClickShowIP(p: player):
+    if {sidebar::showip::%uuid of {_p}%} is true:
+        set {sidebar::showip::%uuid of {_p}%} to false
+    else:
+        set {sidebar::showip::%uuid of {_p}%} to true
+
+    settingsButtonShowIP({_p}, current inventory of {_p})
+
+
+# ============================================================
+# INVENTORY CLICK
+# ============================================================
+
+on inventory click:
+    if name of current inventory of player is "<dark gray><bold>⚙ Settings":
+        cancel event
+
+        if index of clicked slot is 10:
+            settingsGUIvisuals(player)
+            play sound "ui.button.click" to player
+        if index of clicked slot is 11:
+            settingsGUIserver(player)
+            play sound "ui.button.click" to player 
+        else if index of clicked slot is 35:
+            close player's inventory
+            play sound "ui.button.click" to player
+
+
+    else if name of current inventory of player is "<dark gray><bold>⚙ Settings <white>/ <reset><lime>Visuals":
+        cancel event
+
+        if index of clicked slot is 35:
+            close player's inventory
+            play sound "ui.button.click" to player
+
+        else if index of clicked slot is 34:
+            settingsGUI(player)
+            play sound "ui.button.click" to player
+
+        else if index of clicked slot is 10:
+            settingsClickSidebar(player)
+            play sound "ui.button.click" to player
+
+        else if index of clicked slot is 11:
+            settingsClickShowIP(player)
+            play sound "ui.button.click" to player
+    else if name of current inventory of player is "<dark gray><bold>⚙ Settings <white>/ <reset><dark purple>Server":
+        cancel event
+        if index of clicked slot is 17:
+            close player's inventory
+            play sound "ui.button.click" to player
+
+        else if index of clicked slot is 16:
+            settingsGUI(player)
+            play sound "ui.button.click" to player
+
+
+function fillGUI(gui: inventory, rows: number, item: item):
+    loop ({_rows} * 9) times:
+        set slot (loop-number - 1) of {_gui} to {_item}

@@ -1,0 +1,280 @@
+# ========================================================================
+# 🎛️ FREE COSMETICS MENU SELECTOR
+# ========================================================================
+command /cosmetics:
+    trigger:
+        open chest inventory with 4 rows named "<lime><bold>Cosmetics" to player
+        
+        # Fill the background with gray glass panes
+        set {_slot} to 0
+        loop 36 times:
+            set slot {_slot} of player's current inventory to gray stained glass pane named "&7"
+            add 1 to {_slot}
+            
+        # --- COSMETIC BUTTONS (Rows 2 & 3) ---
+        set slot 10 of player's current inventory to snow block named "&fParticle Effects" with lore "&7Click to select the a particle effect."
+        set slot 11 of player's current inventory to player head named "<green>Get your player head" with lore "&7Click to receive your own player head."
+        set slot 12 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 13 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 14 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 15 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 16 of player's current inventory to barrier named "<orange>Under development..." 
+
+        set slot 19 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 20 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 21 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 22 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 23 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 24 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 25 of player's current inventory to barrier named "<orange>Under development..." 
+        set slot 35 of player's current inventory to barrier named "<red><bold>EXIT" with lore "&7Click to exit the menu."
+command /cosmetics/freeparticles:
+    trigger:
+        open chest inventory with 4 rows named "&eParticle effects" to player
+        
+        # Fill the background with gray glass panes
+        set {_slot} to 0
+        loop 36 times:
+            set slot {_slot} of player's current inventory to gray stained glass pane named "&7"
+            add 1 to {_slot}
+            
+        # --- COSMETIC BUTTONS (Rows 2 & 3) ---
+        set slot 10 of player's current inventory to snow block named "&fSnow Cloud Trail" with lore "&7Click to select the Snow trail."
+        set slot 11 of player's current inventory to iron ingot named "&bElectric Storm Trail" with lore "&7Click to select the Electric trail."
+        set slot 12 of player's current inventory to lava bucket named "&cLava Drift Trail" with lore "&7Click to select the Lava trail."
+        set slot 13 of player's current inventory to firework rocket named "&6Firework Sparks Trail" with lore "&7Click to select the Firework trail."
+        set slot 14 of player's current inventory to ender eye named "&dEnderman Aura" with lore "&7Click to select the Ender aura."
+        set slot 15 of player's current inventory to gunpowder named "&8Smoke Screen Aura" with lore "&7Click to select the Smoke aura."
+
+        set slot 16 of player's current inventory to potion named "&5Alchemist Aura" with lore "&7Click to select the Potion aura."
+        set slot 21 of player's current inventory to water bucket named "&9Bubble Wrap Aura" with lore "&7Click to select the Bubble aura."
+        set slot 22 of player's current inventory to note block named "&aNote Symphony Aura" with lore "&7Click to select the Note aura."
+        set slot 23 of player's current inventory to flint and steel named "<yellow>Flame Aura" with lore "&7Click to select the Note aura."
+        set slot 35 of player's current inventory to barrier named "<red><bold>EXIT" with lore "&7Click to exit the menu."
+        # --- MASTER TOGGLE SWITCH (Row 4, Center) ---
+        if {cosmetics::%player%::active} is true:
+            set slot 31 of player's current inventory to lime dye named "&aCosmetics: ENABLED" with lore "&7Click to turn off all particles."
+        else:
+            set slot 31 of player's current inventory to gray dye named "&7Cosmetics: DISABLED" with lore "&7Click to turn on your selected particle."
+
+on inventory click:
+    if name of current inventory is "&eParticle effects":
+        cancel event 
+        
+        if clicked slot is air or gray stained glass pane:
+            stop
+            
+        # 1. Snow
+        if index of clicked slot is 10:
+            set {cosmetics::%player%::effect} to "snow"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &fSnow Cloud Trail&a!" to player
+            close player's inventory
+            
+        # 2. Electric
+        if index of clicked slot is 11:
+            set {cosmetics::%player%::effect} to "electric"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &bElectric Storm Trail&a!" to player
+            close player's inventory
+            
+        # 3. Lava
+        if index of clicked slot is 12:
+            set {cosmetics::%player%::effect} to "lava"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &cLava Drift Trail&a!" to player
+            close player's inventory
+            
+        # 4. Firework
+        if index of clicked slot is 13:
+            set {cosmetics::%player%::effect} to "firework"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &6Firework Sparks Trail&a!" to player
+            close player's inventory
+            
+        # 5. Ender
+        if index of clicked slot is 14:
+            set {cosmetics::%player%::effect} to "ender"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &dEnderman Aura&a!" to player
+            close player's inventory
+            
+        # 6. Smoke
+        if index of clicked slot is 15:
+            set {cosmetics::%player%::effect} to "smoke"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &8Smoke Screen Aura&a!" to player
+            close player's inventory
+            
+        # 7. Potion
+        if index of clicked slot is 16:
+            set {cosmetics::%player%::effect} to "potion"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &5Alchemist Aura&a!" to player
+            close player's inventory
+            
+        # 8. Bubble
+        if index of clicked slot is 21:
+            set {cosmetics::%player%::effect} to "bubble"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &9Bubble Wrap Aura&a!" to player
+            close player's inventory
+            
+        # 9. Note
+        if index of clicked slot is 22:
+            set {cosmetics::%player%::effect} to "note"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected &aNote Symphony Aura&a!" to player
+            close player's inventory
+        if index of clicked slot is 23:
+            set {cosmetics::%player%::effect} to "flame"
+            set {cosmetics::%player%::active} to true
+            send "&aSelected <yellow>Flame Aura&a!" to player
+            close player's inventory
+            
+        # Toggle Switch (ON/OFF)
+        if index of clicked slot is 31:
+            if {cosmetics::%player%::active} is true:
+                set {cosmetics::%player%::active} to false
+                send "&cAll cosmetic particles have been disabled." to player
+            else:
+                set {cosmetics::%player%::active} to true
+                if {cosmetics::%player%::effect} is not set:
+                    set {cosmetics::%player%::effect} to "snow"
+                send "&aCosmetic particles have been enabled!" to player
+            close player's inventory
+        if index of clicked slot is 35:
+            close player's inventory
+    else if name of current inventory is "<lime><bold>Cosmetics":
+        cancel event 
+        
+        if clicked slot is air or gray stained glass pane:
+            stop
+        if index of clicked slot is 10:
+            make player execute command "cosmetics/freeparticles"
+        if index of clicked slot is 11:
+            cancel event
+            
+            # 1. Determine exactly which skull the player has in their inventory
+            set {_skull} to air
+            if player's inventory contains player head:
+                set {_skull} to player head
+            else if player's inventory contains skeleton skull:
+                set {_skull} to skeleton skull
+            else if player's inventory contains wither skeleton skull:
+                set {_skull} to wither skeleton skull
+
+            # 2. If they have a valid skull, take it and give their custom head
+            if {_skull} is not air:
+                remove 1 of {_skull} from player's inventory
+                execute console command "/give %player% minecraft:player_head[minecraft:profile={name:""%player%""}] 1"
+                send "&aYou exchanged your skull for your own player head!" to player
+            else:
+                send "&cYou need a Player Head, Skeleton Skull, or Wither Skeleton Skull to do this!" to player
+
+            if index of clicked slot is 35:
+                close player's inventory
+# ========================================================================
+# ⚙️ MASTER AUTOMATION TRIGGER HOOKS
+# ========================================================================
+
+# Triggers the TRAILS dynamically as players walk
+on player move:
+    if player is on the ground:
+        if player's gamemode is spectator:
+            stop
+        if {cosmetics::%player%::active} is true:
+            ParticleEffect(player, {cosmetics::%player%::effect})
+
+# ========================================================================
+# 🧪 PARTICLE EFFECT ENGINE & FUNCTIONS
+# ========================================================================
+
+function ParticleEffect(p: player, effect: text):
+    if {_effect} is "snow":
+        spawnSnowTrail({_p})
+    else if {_effect} is "electric":
+        spawnElectricTrail({_p})
+    else if {_effect} is "lava":
+        spawnLavaTrail({_p})
+    else if {_effect} is "firework":
+        spawnFireworkTrail({_p})
+    else if {_effect} is "ender":
+        spawnEnderAura({_p})
+    else if {_effect} is "smoke":
+        spawnSmokeAura({_p})
+    else if {_effect} is "potion":
+        spawnPotionAura({_p})
+    else if {_effect} is "bubble":
+        spawnBubbleAura({_p})
+    else if {_effect} is "note":
+        spawnNoteAura({_p})
+    else if {_effect} is "flame":
+        spawnFlameAura({_p})
+
+# ☁️ 1. SNOW CLOUD TRAIL
+function spawnSnowTrail(p: player):
+    set {_loc} to location of {_p}
+    draw 3 of snowflake at {_loc} with offset vector(0.2, 0.1, 0.2) with extra 0
+
+# ⚡ 2. ELECTRIC STORM TRAIL
+function spawnElectricTrail(p: player):
+    set {_loc} to location of {_p}
+    draw 2 of electric spark at {_loc} with offset vector(0.15, 0.1, 0.15) with extra 0
+
+# 🌋 3. LAVA DRIFT TRAIL
+function spawnLavaTrail(p: player):
+    set {_loc} to location of {_p}
+    draw 2 of lava at {_loc} with offset vector(0.2, 0.1, 0.2) with extra 0
+
+# 🌟 4. FIREWORK SPARKS
+function spawnFireworkTrail(p: player):
+    set {_loc} to location of {_p}
+    draw 3 of firework at {_loc} with offset vector(0.2, 0.1, 0.2) with extra 0.05
+
+# 🌌 5. ENDERMAN AURA
+function spawnEnderAura(p: player):
+    set {_loc} to location of {_p}
+    add 0.5 to y-coord of {_loc}
+    draw 6 of portal at {_loc} with offset vector(0.3, 0.5, 0.3) with extra 0.01
+
+# 💨 6. SMOKE SCREEN AURA
+function spawnSmokeAura(p: player):
+    set {_loc} to location of {_p}
+    add 1 to y-coord of {_loc}
+    draw 4 of cloud at {_loc} with offset vector(0.3, 0.4, 0.3) with extra 0
+
+# 🧪 7. ALCHEMIST AURA
+function spawnPotionAura(p: player):
+    set {_loc} to location of {_p}
+    add 1 to y-coord of {_loc}
+    draw 5 of entity effect at {_loc} with offset vector(0.4, 0.6, 0.4) with extra 0
+
+# 🧼 8. BUBBLE WRAP AURA
+function spawnBubbleAura(p: player):
+    set {_loc} to location of {_p}
+    add 1 to y-coord of {_loc}
+    draw 5 of current down at {_loc} with offset vector(0.3, 0.6, 0.3) with extra 0
+
+# 🎵 9. NOTE SYMPHONY AURA
+function spawnNoteAura(p: player):
+    set {_loc} to location of {_p}
+    add 1 to y-coord of {_loc}
+    draw 1 of note at {_loc} with offset vector(0.3, 0.5, 0.3) with extra 1
+function spawnFlameAura(p: player):
+    set {_loc} to location of {_p}
+        # Spawns a custom circle ring around the player's head
+    add 2.1 to y-coord of {_loc}  # Position it just above the head
+
+    loop 16 times:
+            # Calculate a custom 360-degree offset for each particle point
+        set {_angle} to (loop-number * 22.5)
+        set {_x} to 0.6 * sin({_angle})
+        set {_z} to 0.6 * cos({_angle})
+            
+            # Apply the custom offset coordinates to a temporary location
+        set {_spawnLoc} to {_loc}
+        add {_x} to x-coord of {_spawnLoc}
+        add {_z} to z-coord of {_spawnLoc}
+            
+        draw 1 of flame at {_spawnLoc} with extra 0

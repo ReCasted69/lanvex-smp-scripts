@@ -1,0 +1,7 @@
+on load:
+    set {visuals.maxonlineplayers} to 50
+    set {visuals.servername} to "<dark purple><bold><italic>ʟᴀɴᴠᴇx <gold><bold><italic>ꜱᴍᴘ<reset>"
+    set {visuals.announcementtitle} to ""
+    set {visuals.announcementtext} to ""
+    set {ownername} to "ReCasted_"
+    set {visuals.servericon} to "<red><bold>Survival"

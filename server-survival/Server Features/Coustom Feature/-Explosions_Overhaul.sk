@@ -1,0 +1,225 @@
+options:
+    MaxAllowedPower: 50
+    GlobalKnockbackStrength: 2.2
+
+on explosion prime:
+    if event-entity is wind charge:
+        stop
+    set {_epicenter} to location of event-entity
+
+
+    set {_epicenter} to location of event-entity
+    if event-entity is creeper:
+        set {_powerSetting} to 1
+    else if event-entity is minecart with tnt:
+        set {_powerSetting} to 2
+    else if event-entity is charged creeper:
+        set {_powerSetting} to 5
+    else if event-entity is end crystal:
+        set {_powerSetting} to 4
+    else if event-entity is fireball:
+        set {_powerSetting} to 1
+    else if event-entity is respawn anchor:
+        set {_powerSetting} to 3
+    else if event-entity is bed:
+        set {_powerSetting} to 3
+    else if event-entity is wither:
+        set {_powerSetting} to 5
+    else if event-entity is tnt:
+        set {_powerSetting} to 2
+    else:
+        stop
+
+    executeUpgradedExplosion({_epicenter}, {_powerSetting})
+
+
+function executeUpgradedExplosion(loc: location, power: number):
+    set {_nativeForce} to min({_power} * 3, {@MaxAllowedPower})
+    set {_impactRadius} to {_power} * 11
+    set {_visualRadius} to {_power} * 10
+    set {_kineticPush} to {_power} * 1.5
+
+    play sound "entity.generic.explode" with volume 10 and pitch 0.2 at {_loc}
+    play sound "entity.lightning_bolt.thunder" with volume 1500 and pitch 0.1 at {_loc}
+
+    draw 50 explosion emitter at {_loc} with offset vector(2, 2, 2) with extra 0.1
+    draw 10 large smoke at {_loc} with offset vector(3, 3, 3) with extra 0.05
+
+    loop all entities in radius {_impactRadius} of {_loc}:
+        set {_p} to loop-entity
+
+        set {_direction} to vector between {_loc} and {_p}
+        set y of {_direction} to 0.4
+        set {_direction} to normalized {_direction}
+
+        set {_distance} to distance between {_loc} and {_p}
+        set {_falloff} to 1 - ({_distance} / {_impactRadius})
+
+        if {_falloff} < 0.2:
+            set {_falloff} to 0.2
+
+        set {_direction} to {_direction} * ({@GlobalKnockbackStrength} * {_falloff} * {_power})
+        set velocity of {_p} to {_direction}
+
+        damage {_p} by 1
+
+    create explosion of force {_nativeForce} at {_loc}
+
+    processVisualShockwave({_loc}, 1, {_visualRadius}, {_kineticPush})
+    processUpgradedMushroomCloud({_loc}, {_power})
+
+
+function processVisualShockwave(loc: location, currentRadius: number, maxRadius: number, strength: number):
+    if {_currentRadius} > {_maxRadius}:
+        stop
+
+    loop all entities in radius ({_currentRadius} + 1.5) of {_loc}:
+        if distance between loop-entity and {_loc} >= ({_currentRadius} - 0.5):
+            if loop-entity is item frame or glow item frame or armor stand or painting:
+                kill loop-entity
+
+    loop blocks in radius ({_currentRadius} + 1.5) of {_loc}:
+        if distance between loop-block and {_loc} >= ({_currentRadius} - 0.5):
+            if loop-block is glass or glass pane or tinted glass:
+                break loop-block naturally
+                play sound "block.glass.break" with volume 30 and pitch 1 at location of loop-block
+
+    loop 50 times:
+        set {_angle} to random number between 0 and 360
+        set {_x} to cos({_angle}) * {_currentRadius}
+        set {_z} to sin({_angle}) * {_currentRadius}
+
+        set {_pLoc} to {_loc}
+        add {_x} to x-coord of {_pLoc}
+        add {_z} to z-coord of {_pLoc}
+
+        draw 50 cloud at {_pLoc} with offset vector(0.1, 0.3, 0.1) with extra 0.01
+
+    set {_nextRadius} to {_currentRadius} + 2
+    wait 1 tick
+    processVisualShockwave({_loc}, {_nextRadius}, {_maxRadius}, {_strength})
+
+
+function processUpgradedMushroomCloud(loc: location, power: number):
+    set {_soundRadius} to 30 + ({_power} * 10)
+
+    play sound "entity.generic.explode" with volume 2 and pitch 0.5 at {_loc} for all players in radius {_soundRadius} of {_loc}
+    play sound "entity.dragon_fireball.explode" with volume 1.5 and pitch 0.7 at {_loc} for all players in radius {_soundRadius} of {_loc}
+
+    loop all players in radius ({_soundRadius} / 2) of {_loc}:
+        set {_dir} to direction from {_loc} to loop-player
+        set y of {_dir} to 0.1
+        set vector length of {_dir} to 0.25
+        push loop-player {_dir}
+
+    set {_flashRadius} to 4 + ({_power} * 1.5)
+
+    draw 120 of lava at {_loc} with offset vector({_flashRadius} / 1.5, 1.5, {_flashRadius} / 1.5)
+    draw 100 of flame at {_loc} with offset vector({_flashRadius} / 1.2, 2, {_flashRadius} / 1.2)
+
+    wait 2 ticks
+
+    set {_totalRiseTime} to 25 + ({_power} * 5)
+    set {_capMovingLoc} to {_loc}
+
+    set {_initialHeight} to 5 + ({_power} * 2)
+    add {_initialHeight} to y-coord of {_capMovingLoc}
+
+    set {_maxCapRadius} to 12 + ({_power} * 5)
+    set {_maxBaseRadius} to 6 + ({_power} * 2)
+
+    loop {_totalRiseTime} times:
+        add 0.2 to y-coord of {_capMovingLoc}
+
+        set {_riseProgress} to loop-number-1 / {_totalRiseTime}
+        set {_currentCapRadius} to {_maxCapRadius} * ({_riseProgress} ^ 0.2)
+
+        if loop-number-1 mod 2 is 0:
+            set {_points} to round(1.2 * 3.1416 * {_currentCapRadius})
+
+            loop {_points} times:
+                set {_angle} to (360 / {_points}) * loop-number-2
+                set {_x} to cos({_angle}) * {_currentCapRadius}
+                set {_z} to sin({_angle}) * {_currentCapRadius}
+
+                set {_domeHeight} to ({_currentCapRadius} * 0.4) * (1 - (({_x}^2 + {_z}^2) / ({_currentCapRadius}^2)))
+
+                set {_pLoc} to {_capMovingLoc}
+                add {_x} to x-coord of {_pLoc}
+                add {_z} to z-coord of {_pLoc}
+                add {_domeHeight} to y-coord of {_pLoc}
+
+                draw 1 large smoke at {_pLoc} with offset vector(1, 0.5, 1) with extra 0
+
+        draw 80 large smoke at {_capMovingLoc} with offset vector({_currentCapRadius} / 1.2, 2, {_currentCapRadius} / 1.2) with extra 0
+        draw 40 campfire cosy smoke at {_capMovingLoc} with offset vector({_currentCapRadius} / 1.5, 1.5, {_currentCapRadius} / 1.5) with extra 0
+
+        if {_riseProgress} is less than 0.7:
+            set {_currentBaseRadius} to {_maxBaseRadius} * ({_riseProgress} ^ 0.4)
+            set {_basePoints} to round(1.5 * 3.1416 * {_currentBaseRadius})
+
+            if loop-number-1 mod 2 is 0:
+                loop {_basePoints} times:
+                    set {_bAngle} to (360 / {_basePoints}) * loop-number-2
+                    set {_bx} to cos({_bAngle}) * {_currentBaseRadius}
+                    set {_bz} to sin({_bAngle}) * {_currentBaseRadius}
+
+                    set {_bLoc} to {_loc}
+                    add {_bx} to x-coord of {_bLoc}
+                    add {_bz} to z-coord of {_bLoc}
+                    add random float between 0.1 and 0.8 to y-coord of {_bLoc}
+
+                    draw 1 cloud at {_bLoc} with offset vector(0.4, 0.3, 0.4) with extra 0
+
+                    if random integer between 1 and 20 is 1:
+                        draw 1 lava spark at {_bLoc} with offset vector(0.2, 0.2, 0.2) with extra 0.1
+
+            draw 20 large smoke at {_loc} with offset vector({_currentBaseRadius} / 1.5, 0.8, {_currentBaseRadius} / 1.5) with extra 0
+            draw 15 cloud at {_loc} with offset vector({_currentBaseRadius} / 2, 0.5, {_currentBaseRadius} / 2) with extra 0
+
+        set {_currentStemHeight} to y-coord of {_capMovingLoc} - y-coord of {_loc}
+
+        set {_stemTrailLoc} to {_loc}
+        add ({_currentStemHeight} / 2) to y-coord of {_stemTrailLoc}
+        subtract 1.5 from y-coord of {_stemTrailLoc}
+
+        set {_yOffset} to {_currentStemHeight} / 2
+
+        draw 60 large smoke at {_stemTrailLoc} with offset vector(0.5, {_yOffset}, 0.5) with extra 0
+        draw 30 campfire cosy smoke at {_stemTrailLoc} with offset vector(0.3, {_yOffset}, 0.3) with extra 0
+
+        wait 1 tick
+
+    set {_lingerTicks} to 8
+
+    loop {_lingerTicks} times:
+        set {_points} to round(1.5 * 3.1416 * {_maxCapRadius})
+
+        loop {_points} times:
+            set {_angle} to (360 / {_points}) * loop-number-2
+            set {_x} to cos({_angle}) * {_maxCapRadius}
+            set {_z} to sin({_angle}) * {_maxCapRadius}
+
+            set {_domeHeight} to ({_maxCapRadius} * 0.4) * (1 - (({_x}^2 + {_z}^2) / ({_maxCapRadius}^2)))
+
+            set {_pLoc} to {_capMovingLoc}
+            add {_x} to x-coord of {_pLoc}
+            add {_z} to z-coord of {_pLoc}
+            add {_domeHeight} to y-coord of {_pLoc}
+
+            draw 1 large smoke at {_pLoc} with offset vector(1.5, 0.5, 1.5) with extra 0
+
+        draw 100 large smoke at {_capMovingLoc} with offset vector({_maxCapRadius} / 1.2, 3, {_maxCapRadius} / 1.2) with extra 0
+        draw 25 campfire cosy smoke at {_capMovingLoc} with offset vector({_maxCapRadius} / 1.5, 2, {_maxCapRadius} / 1.5) with extra 0
+
+        draw 15 cloud at {_loc} with offset vector({_maxBaseRadius} / 1.2, 0.6, {_maxBaseRadius} / 1.2) with extra 0
+
+        set {_stemHeight} to y-coord of {_capMovingLoc} - y-coord of {_loc}
+
+        set {_stemCenter} to {_loc}
+        add ({_stemHeight} / 2) to y-coord of {_stemCenter}
+        subtract 1.5 from y-coord of {_stemCenter}
+
+        draw 40 large smoke at {_stemCenter} with offset vector(0.8, {_stemHeight} / 2, 0.8) with extra 0
+
+        wait 6 ticks

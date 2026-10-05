@@ -1,0 +1,308 @@
+# =========================================================================
+#            UNIFIED ZERO-LAG TELEGRAPH SYSTEM (WITH GUI CONFIGS)
+# =========================================================================
+# Manual Mode: Right-click the Loom to open the terminal GUI.
+# Loop Mode:   Look at the Loom and type: /telegraph <text>
+# Stop Loop:   Look at the Loom and type: /telegraph stop
+# =========================================================================
+
+options:
+    # Default fallback configurations (Used if block metadata is not yet adjusted)
+    def_dot_duration: 4    # ticks
+    def_dash_duration: 9      # ticks
+    
+    part_delay_dot: 10 ticks     # Cooldown directly after a DOT (.)
+    part_delay_dash: 15 tick     # Cooldown directly after a LINE/DASH (-)
+    
+    letter_delay: 10 ticks       # Delay between two different letters
+    def_word_delay: 18        # ticks
+    loop_delay: 40 ticks        # Delay before restarting an auto-text loop
+
+# --- HELPER FUNCTION: INVENTORY VALUE UPDATER ---
+# Updates GUI menu item text on the fly when clicking configuration buttons
+function refreshTelegraphConfigGUI(p: player, loom: block):
+    set {_dot} to metadata tag "cfg_dot" of {_loom}
+    if {_dot} is not set:
+        set {_dot} to {@def_dot_duration}
+    set {_dash} to metadata tag "cfg_dash" of {_loom}
+    if {_dash} is not set:
+        set {_dash} to {@def_dash_duration}
+    set {_word} to metadata tag "cfg_word" of {_loom}
+    if {_word} is not set:
+        set {_word} to {@def_word_delay}
+
+    set slot 18 of {_p}'s current inventory to lime dye named "<green><bold>CONFIG: Dot Length" with lore "<white>Current: <yellow>%{_dot}% Ticks%nl%%nl%<gray>Left-Click: <green>+1 Tick%nl%<gray>Right-Click: <red>-1 Tick <silver>(Min: 1)"
+    set slot 20 of {_p}'s current inventory to orange dye named "<gold><bold>CONFIG: Dash Length" with lore "<white>Current: <yellow>%{_dash}% Ticks%nl%%nl%<gray>Left-Click: <green>+1 Tick%nl%<gray>Right-Click: <red>-1 Tick <silver>(Min: 1)"
+    set slot 22 of {_p}'s current inventory to yellow dye named "<yellow><bold>CONFIG: Word Delay" with lore "<white>Current: <yellow>%{_word}% Ticks%nl%%nl%<gray>Left-Click: <green>+2 Ticks%nl%<gray>Right-Click: <red>-2 Ticks <silver>(Min: 2)"
+
+# --- 1. THE MANUAL TRANSMISSION & CONFIG GUI ---
+on rightclick on loom:
+    if block above clicked block is observer:
+        cancel event
+        
+        if metadata tag "is_transmitting" of clicked block is true:
+            send "<red>Error: This telegraph is currently running an automated text loop! Use <light gray>/telegraph stop<reset>" to player
+            stop
+            
+        open chest inventory with 3 rows named "<dark gray>Telegraph Terminal" to player
+        
+        # Row 1: Functional Signal Input Buttons
+        set slot 2 of player's current inventory to green concrete named "<green><bold>DOT (.)" with lore "<gray>Fires a short redstone pulse."
+        set slot 4 of player's current inventory to orange concrete named "<gold><bold>DASH (-)" with lore "<gray>Fires a long redstone pulse."
+        set slot 6 of player's current inventory to redstone lamp named "<yellow><bold>SPACE" with lore "<gray>Fires a manual pause boundary."
+        
+        # Row 2: Guide Help Sign
+        set slot 13 of player's current inventory to light named "<yellow>INFO" with lore "<white>Use <gray>/telegraph <text><white> to automatically transmit text in morse code. %nl%Remember to look at the loom!"
+        
+        # Row 3: Dynamic Config Setters
+        refreshTelegraphConfigGUI(player, clicked block)
+
+on inventory click:
+    name of player's current inventory is "<dark gray>Telegraph Terminal"
+    cancel event
+    
+    set {_loom} to player's targeted block
+    if type of {_loom} is not loom:
+        stop
+    set {_observer} to block above {_loom}
+    if type of {_observer} is not observer:
+        stop
+        
+    if metadata tag "is_transmitting" of {_loom} is true:
+        close player's inventory
+        set metadata tag "is_transmitting" of {_loom} to false
+        
+
+    # --- GET DYNAMIC VALUES OR USE FALLBACK DEFAULTS ---
+    set {_dot} to metadata tag "cfg_dot" of {_loom}
+    if {_dot} is not set:
+        set {_dot} to {@def_dot_duration}
+    set {_dash} to metadata tag "cfg_dash" of {_loom}
+    if {_dash} is not set:
+        set {_dash} to {@def_dash_duration}
+    set {_word} to metadata tag "cfg_word" of {_loom}
+    if {_word} is not set:
+        set {_word} to {@def_word_delay}
+
+    # --- HANDLERS FOR ROW 1 (SIGNAL INPUTS) ---
+    if clicked slot is 2: # DOT (.)
+        set block at {_observer} to redstone_block
+        play sound "block.iron_trapdoor.open" with volume 1.5 and pitch 1.8 at {_loom}
+        wait "%{_dot}% ticks" parsed as time span
+        set block at {_observer} to observer
+        play sound "block.iron_trapdoor.close" with volume 1.5 and pitch 1.5 at {_loom}
+        wait {@part_delay_dot}
+        
+    else if clicked slot is 4: # DASH (-)
+        set block at {_observer} to redstone_block
+        play sound "block.iron_trapdoor.open" with volume 1.5 and pitch 1.0 at {_loom}
+        wait "%{_dash}% ticks" parsed as time span
+        set block at {_observer} to observer
+        play sound "block.iron_trapdoor.close" with volume 1.5 and pitch 0.8 at {_loom}
+        wait {@part_delay_dash}
+        
+    else if clicked slot is 6: # SPACE
+        wait "%{_word}% ticks" parsed as time span
+
+    # --- HANDLERS FOR ROW 3 (DYNAMIC CONFIG CLICKERS) ---
+    else if clicked slot is 18: # Adjust Dot Length
+        if click type is left mouse button:
+            add 1 to {_dot}
+        else if click type is right mouse button:
+            remove 1 from {_dot}
+            if {_dot} < 1:
+                set {_dot} to 1
+        set metadata tag "cfg_dot" of {_loom} to {_dot}
+        play sound "ui.button.click" with volume 0.5 and pitch 1.5 to player
+        refreshTelegraphConfigGUI(player, {_loom})
+
+    else if clicked slot is 20: # Adjust Dash Length
+        if click type is left mouse button:
+            add 1 to {_dash}
+        else if click type is right mouse button:
+            remove 1 from {_dash}
+            if {_dash} < 1:
+                set {_dash} to 1
+        set metadata tag "cfg_dash" of {_loom} to {_dash}
+        play sound "ui.button.click" with volume 0.5 and pitch 1.2 to player
+        refreshTelegraphConfigGUI(player, {_loom})
+
+    else if clicked slot is 22: # Adjust Word Space Delay
+        if click type is left mouse button:
+            add 2 to {_word}
+        else if click type is right mouse button:
+            remove 2 from {_word}
+            if {_word} < 2:
+                set {_word} to 2
+        set metadata tag "cfg_word" of {_loom} to {_word}
+        play sound "ui.button.click" with volume 0.5 and pitch 0.9 to player
+        refreshTelegraphConfigGUI(player, {_loom})
+
+
+# --- 2. THE AUTOMATED TEXT-TO-MORSE LOOP ---
+command /telegraph <text>:
+    usage: /telegraph <text> or /telegraph stop
+    trigger:
+        set {_loom} to player's targeted block
+        if type of {_loom} is not loom:
+            send "<red>Error: You must be looking at a Loom!" to player
+            stop
+        set {_observer} to block above {_loom}
+        if type of {_observer} is not observer:
+            send "<red>Error: There must be an Observer on top of the Loom!" to player
+            stop
+            
+        if arg-1 is "stop":
+            if metadata tag "is_transmitting" of {_loom} is true:
+                set metadata tag "is_transmitting" of {_loom} to false
+                send "<red>Telegraph loop has been stopped." to player
+            else:
+                send "<gray>This telegraph is not currently running an auto-loop." to player
+            stop
+
+        if metadata tag "is_transmitting" of {_loom} is true:
+            send "<red>Error: This telegraph is already looping! Type '/telegraph stop' first." to player
+            stop
+            
+        set metadata tag "is_transmitting" of {_loom} to true
+        send "<yellow>Now looping: <white>%arg-1% <gray>(Type /telegraph stop to cancel)" to player
+        
+        set {_input} to lowercase arg-1
+        set {_chars::*} to {_input} split by ""
+        
+        while metadata tag "is_transmitting" of {_loom} is true:
+            # Re-fetch config options dynamically at the start of each text cycle loop
+            set {_dot} to metadata tag "cfg_dot" of {_loom}
+            if {_dot} is not set:
+                set {_dot} to {@def_dot_duration}
+            set {_dash} to metadata tag "cfg_dash" of {_loom}
+            if {_dash} is not set:
+                set {_dash} to {@def_dash_duration}
+            set {_word} to metadata tag "cfg_word" of {_loom}
+            if {_word} is not set:
+                set {_word} to {@def_word_delay}
+
+            loop {_chars::*}:
+                if metadata tag "is_transmitting" of {_loom} is false:
+                    stop
+                    
+                set {_char} to loop-value
+                set {_code} to ""
+                
+                # Dictionary Map
+                if {_char} is "a":
+                    set {_code} to ".-"
+                else if {_char} is "b":
+                    set {_code} to "-..."
+                else if {_char} is "c":
+                    set {_code} to "-.-."
+                else if {_char} is "d":
+                    set {_code} to "-.."
+                else if {_char} is "e":
+                    set {_code} to "."
+                else if {_char} is "f":
+                    set {_code} to "..-."
+                else if {_char} is "g":
+                    set {_code} to "--."
+                else if {_char} is "h":
+                    set {_code} to "...."
+                else if {_char} is "i":
+                    set {_code} to ".."
+                else if {_char} is "j":
+                    set {_code} to ".---"
+                else if {_char} is "k":
+                    set {_code} to "-.-"
+                else if {_char} is "l":
+                    set {_code} to ".-.."
+                else if {_char} is "m":
+                    set {_code} to "--"
+                else if {_char} is "n":
+                    set {_code} to "-."
+                else if {_char} is "o":
+                    set {_code} to "---"
+                else if {_char} is "p":
+                    set {_code} to ".--."
+                else if {_char} is "q":
+                    set {_code} to "--.-"
+                else if {_char} is "r":
+                    set {_code} to ".-."
+                else if {_char} is "s":
+                    set {_code} to "..."
+                else if {_char} is "t":
+                    set {_code} to "-"
+                else if {_char} is "u":
+                    set {_code} to "..-"
+                else if {_char} is "v":
+                    set {_code} to "...-"
+                else if {_char} is "w":
+                    set {_code} to ".--"
+                else if {_char} is "x":
+                    set {_code} to "-..-"
+                else if {_char} is "y":
+                    set {_code} to "-.--"
+                else if {_char} is "z":
+                    set {_code} to "--.."
+                else if {_char} is "1":
+                    set {_code} to ".----"
+                else if {_char} is "2":
+                    set {_code} to "..---"
+                else if {_char} is "3":
+                    set {_code} to "...--"
+                else if {_char} is "4":
+                    set {_code} to "....-"
+                else if {_char} is "5":
+                    set {_code} to "....."
+                else if {_char} is "6":
+                    set {_code} to "-...."
+                else if {_char} is "7":
+                    set {_code} to "--..."
+                else if {_char} is "8":
+                    set {_code} to "---.."
+                else if {_char} is "9":
+                    set {_code} to "----."
+                else if {_char} is "0":
+                    set {_code} to "-----"
+                else if {_char} is " ":
+                    set {_code} to "space"
+                    
+                if {_code} is "space":
+                    wait "%{_word}% ticks" parsed as time span
+                else if {_code} is not "":
+                    set {_symbols::*} to {_code} split by ""
+                    
+                    loop {_symbols::*}:
+                        if metadata tag "is_transmitting" of {_loom} is false:
+                            set block at {_observer} to observer
+                            stop
+                            
+                        set {_symbol} to loop-value-2
+                        
+                        if {_symbol} is ".":
+                            set block at {_observer} to redstone_block
+                            play sound "block.iron_trapdoor.open" with volume 1.5 and pitch 1.8 at {_loom}
+                            wait "%{_dot}% ticks" parsed as time span
+                            set block at {_observer} to observer
+                            play sound "block.iron_trapdoor.close" with volume 1.5 and pitch 1.5 at {_loom}
+                            wait {@part_delay_dot}
+                            
+                        else if {_symbol} is "-":
+                            set block at {_observer} to redstone_block
+                            play sound "block.iron_trapdoor.open" with volume 1.5 and pitch 1.0 at {_loom}
+                            wait "%{_dash}% ticks" parsed as time span
+                            set block at {_observer} to observer
+                            play sound "block.iron_trapdoor.close" with volume 1.5 and pitch 0.8 at {_loom}
+                            wait {@part_delay_dash}
+                    wait {@letter_delay}
+            wait {@loop_delay}
+
+# --- 3. SAFETY DESTROY TRACKER ---
+on break of loom or observer:
+    if type of event-block is loom:
+        set {_loom} to event-block
+    else:
+        set {_loom} to block below event-block
+    
+    set metadata tag "is_transmitting" of {_loom} to false
+    clear metadata tag "cfg_dot" of {_loom}
+    clear metadata tag "cfg_dash" of {_loom}
+    clear metadata tag "cfg_word" of {_loom}

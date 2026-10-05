@@ -1,0 +1,799 @@
+# ============================================================
+# WIRELESS RADIO SYSTEM
+# ============================================================
+
+options:
+    base_range: 100
+    range_per_rod: 250
+    range_per_copper: 500
+    range_per_netherite: 1000000
+
+    default_frequency: 91.3
+    prefix: &8[&bWireless Radio&8]&r
+
+
+# ============================================================
+# OPEN RADIO GUI
+# ============================================================
+
+on right click on iron block or redstone block:
+
+    set {_radio} to location of target block
+
+    # --------------------------------------------------------
+    # CHECK ANTENNA
+    # --------------------------------------------------------
+
+    set {_check} to location of block above target block
+
+    set {_rods} to 0
+    set {_copper} to 0
+    set {_netherite} to 0
+    set {_hasRod} to false
+
+    while block at {_check} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+        if block at {_check} is lightning rod:
+            add 1 to {_rods}
+            set {_hasRod} to true
+
+        else if block at {_check} is waxed lightning rod:
+            add 1 to {_rods}
+            set {_hasRod} to true
+
+        else if block at {_check} is copper block:
+            add 1 to {_copper}
+
+        else if block at {_check} is waxed copper block:
+            add 1 to {_copper}
+
+        else if block at {_check} is netherite block:
+            add 1 to {_netherite}
+
+        add 1 to y-coordinate of {_check}
+
+    if {_hasRod} is false:
+        send "{@prefix} &cRadio inactive! Antenna requires at least one Lightning Rod." to player
+        stop
+
+    cancel event
+
+
+    # --------------------------------------------------------
+    # CALCULATE RANGE
+    # --------------------------------------------------------
+
+    set {_range} to {@base_range}
+
+    add ({_rods} * {@range_per_rod}) to {_range}
+    add ({_copper} * {@range_per_copper}) to {_range}
+    add ({_netherite} * {@range_per_netherite}) to {_range}
+
+
+    # --------------------------------------------------------
+    # REGISTER RADIO
+    # --------------------------------------------------------
+
+    if {radio::list::*} does not contain {_radio}:
+        add {_radio} to {radio::list::*}
+
+
+    # --------------------------------------------------------
+    # DEFAULT VALUES
+    # --------------------------------------------------------
+
+    if {radio::%{_radio}%::frequency} is not set:
+        set {radio::%{_radio}%::frequency} to {@default_frequency}
+
+    if {radio::%{_radio}%::mode} is not set:
+        set {radio::%{_radio}%::mode} to "Receiver"
+
+
+    # --------------------------------------------------------
+    # COUNT CONNECTED RADIOS
+    # --------------------------------------------------------
+
+    set {_count} to 0
+    set {_myFreq} to {radio::%{_radio}%::frequency}
+
+    loop {radio::list::*}:
+
+        set {_other} to loop-value
+
+        if {_other} is not {_radio}:
+
+            if {radio::%{_other}%::frequency} is {_myFreq}:
+
+                set {_otherCheck} to location of block above block at {_other}
+
+                set {_otherRods} to 0
+                set {_otherCopper} to 0
+                set {_otherNetherite} to 0
+                set {_otherHasRod} to false
+
+                while block at {_otherCheck} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+                    if block at {_otherCheck} is lightning rod:
+                        add 1 to {_otherRods}
+                        set {_otherHasRod} to true
+
+                    else if block at {_otherCheck} is waxed lightning rod:
+                        add 1 to {_otherRods}
+                        set {_otherHasRod} to true
+
+                    else if block at {_otherCheck} is copper block:
+                        add 1 to {_otherCopper}
+
+                    else if block at {_otherCheck} is waxed copper block:
+                        add 1 to {_otherCopper}
+
+                    else if block at {_otherCheck} is netherite block:
+                        add 1 to {_otherNetherite}
+
+                    add 1 to y-coordinate of {_otherCheck}
+
+                if {_otherHasRod} is true:
+
+                    set {_otherRange} to {@base_range}
+
+                    add ({_otherRods} * {@range_per_rod}) to {_otherRange}
+                    add ({_otherCopper} * {@range_per_copper}) to {_otherRange}
+                    add ({_otherNetherite} * {@range_per_netherite}) to {_otherRange}
+
+                    if distance between {_radio} and {_other} <= {_range}:
+                        add 1 to {_count}
+
+                    else if distance between {_radio} and {_other} <= {_otherRange}:
+                        add 1 to {_count}
+
+
+    # --------------------------------------------------------
+    # PLAYER SESSION
+    # --------------------------------------------------------
+
+    set {current_radio::%player%} to {_radio}
+
+    open chest inventory with 3 rows named "&1Wireless Configuration" to player
+
+    set slot (all integers from 0 to 26) of current inventory of player to gray stained glass pane named " "
+
+
+    # --------------------------------------------------------
+    # FREQUENCY BUTTON
+    # --------------------------------------------------------
+
+    set slot 10 of current inventory of player to redstone named "&eFrequency Control" with lore "&7Current: &b%{radio::%{_radio}%::frequency}% MHz" and "" and "&aLeft-Click: &7+0.1 MHz" and "&cRight-Click: &7-0.1 MHz"
+
+
+    # --------------------------------------------------------
+    # ANTENNA BUTTON
+    # --------------------------------------------------------
+
+    set slot 13 of current inventory of player to lightning rod named "&eAntenna Range Stats" with lore "&7Base Range: &f{@base_range} blocks" and "&7Antenna Rods: &f%{_rods}%" and "&7Copper/Waxed Blocks: &f%{_copper}%" and "&7Netherite Blocks: &f%{_netherite}%" and "" and "&7Total Range: &a%{_range}% blocks" and "&7Connected Radios: &b%{_count}%"
+
+
+    # --------------------------------------------------------
+    # MODE BUTTON
+    # --------------------------------------------------------
+
+    if {radio::%{_radio}%::mode} is "Transmitter":
+
+        set slot 16 of current inventory of player to repeater named "&eRadio Function Mode" with lore "&7Current Mode: &aTRANSMITTER" and "" and "&eClick to switch to Redstone Receiver!"
+
+    else if {radio::%{_radio}%::mode} is "Receiver":
+
+        set slot 16 of current inventory of player to redstone torch named "&eRadio Function Mode" with lore "&7Current Mode: &cREDSTONE RECEIVER" and "" and "&eClick to switch to Sound Receiver!"
+
+    else:
+
+        set slot 16 of current inventory of player to jukebox named "&eRadio Function Mode" with lore "&7Current Mode: &bSOUND RECEIVER" and "" and "&eClick to switch to Transmitter!"
+
+
+# ============================================================
+# GUI CLICK
+# ============================================================
+
+on inventory click:
+
+    if name of current inventory of player is not "&1Wireless Configuration":
+        stop
+
+    cancel event
+
+    set {_radio} to {current_radio::%player%}
+
+    if {_radio} is not set:
+        stop
+
+
+    # --------------------------------------------------------
+    # FREQUENCY
+    # --------------------------------------------------------
+
+    if clicked slot is 10:
+
+        if click type is left mouse button:
+            add 0.1 to {radio::%{_radio}%::frequency}
+
+        else if click type is right mouse button:
+            remove 0.1 from {radio::%{_radio}%::frequency}
+
+        set {radio::%{_radio}%::frequency} to round({radio::%{_radio}%::frequency} * 10) / 10
+
+        if {radio::%{_radio}%::frequency} < 0:
+            set {radio::%{_radio}%::frequency} to 0
+
+        play sound "ui.button.click" with volume 0.5 to player
+
+
+    # --------------------------------------------------------
+    # MODE
+    # --------------------------------------------------------
+
+    if clicked slot is 16:
+
+        if {radio::%{_radio}%::mode} is "Transmitter":
+
+            set {radio::%{_radio}%::mode} to "Receiver"
+
+            if block at {_radio} is redstone block:
+                set block at {_radio} to iron block
+
+
+        else if {radio::%{_radio}%::mode} is "Receiver":
+
+            set {radio::%{_radio}%::mode} to "Sound Receiver"
+
+            if block at {_radio} is redstone block:
+                set block at {_radio} to iron block
+
+
+        else:
+
+            set {radio::%{_radio}%::mode} to "Transmitter"
+
+
+        play sound "entity.item.frame.add_item" with volume 0.8 to player
+
+
+    # --------------------------------------------------------
+    # REFRESH GUI
+    # --------------------------------------------------------
+
+    set {_check} to location of block above block at {_radio}
+
+    set {_rods} to 0
+    set {_copper} to 0
+    set {_netherite} to 0
+    set {_hasRod} to false
+
+    while block at {_check} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+        if block at {_check} is lightning rod:
+            add 1 to {_rods}
+            set {_hasRod} to true
+
+        else if block at {_check} is waxed lightning rod:
+            add 1 to {_rods}
+            set {_hasRod} to true
+
+        else if block at {_check} is copper block:
+            add 1 to {_copper}
+
+        else if block at {_check} is waxed copper block:
+            add 1 to {_copper}
+
+        else if block at {_check} is netherite block:
+            add 1 to {_netherite}
+
+        add 1 to y-coordinate of {_check}
+
+
+    set {_range} to {@base_range}
+
+    add ({_rods} * {@range_per_rod}) to {_range}
+    add ({_copper} * {@range_per_copper}) to {_range}
+    add ({_netherite} * {@range_per_netherite}) to {_range}
+
+
+    # --------------------------------------------------------
+    # CONNECTED COUNT
+    # --------------------------------------------------------
+
+    set {_count} to 0
+    set {_myFreq} to {radio::%{_radio}%::frequency}
+
+    loop {radio::list::*}:
+
+        set {_other} to loop-value
+
+        if {_other} is not {_radio}:
+
+            if {radio::%{_other}%::frequency} is {_myFreq}:
+
+                set {_otherCheck} to location of block above block at {_other}
+
+                set {_otherRods} to 0
+                set {_otherCopper} to 0
+                set {_otherNetherite} to 0
+                set {_otherHasRod} to false
+
+                while block at {_otherCheck} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+                    if block at {_otherCheck} is lightning rod:
+                        add 1 to {_otherRods}
+                        set {_otherHasRod} to true
+
+                    else if block at {_otherCheck} is waxed lightning rod:
+                        add 1 to {_otherRods}
+                        set {_otherHasRod} to true
+
+                    else if block at {_otherCheck} is copper block:
+                        add 1 to {_otherCopper}
+
+                    else if block at {_otherCheck} is waxed copper block:
+                        add 1 to {_otherCopper}
+
+                    else if block at {_otherCheck} is netherite block:
+                        add 1 to {_otherNetherite}
+
+                    add 1 to y-coordinate of {_otherCheck}
+
+
+                if {_otherHasRod} is true:
+
+                    set {_otherRange} to {@base_range}
+
+                    add ({_otherRods} * {@range_per_rod}) to {_otherRange}
+                    add ({_otherCopper} * {@range_per_copper}) to {_otherRange}
+                    add ({_otherNetherite} * {@range_per_netherite}) to {_otherRange}
+
+                    if distance between {_radio} and {_other} <= {_range}:
+                        add 1 to {_count}
+
+                    else if distance between {_radio} and {_other} <= {_otherRange}:
+                        add 1 to {_count}
+
+
+    # --------------------------------------------------------
+    # REFRESH FREQUENCY
+    # --------------------------------------------------------
+
+    set slot 10 of current inventory of player to redstone named "&eFrequency Control" with lore "&7Current: &b%{radio::%{_radio}%::frequency}% MHz" and "" and "&aLeft-Click: &7+0.1 MHz" and "&cRight-Click: &7-0.1 MHz"
+
+
+    # --------------------------------------------------------
+    # REFRESH ANTENNA
+    # --------------------------------------------------------
+
+    set slot 13 of current inventory of player to lightning rod named "&eAntenna Range Stats" with lore "&7Base Range: &f{@base_range} blocks" and "&7Antenna Rods: &f%{_rods}%" and "&7Copper/Waxed Blocks: &f%{_copper}%" and "&7Netherite Blocks: &f%{_netherite}%" and "" and "&7Total Range: &a%{_range}% blocks" and "&7Connected Radios: &b%{_count}%"
+
+
+    # --------------------------------------------------------
+    # REFRESH MODE
+    # --------------------------------------------------------
+
+    if {radio::%{_radio}%::mode} is "Transmitter":
+
+        set slot 16 of current inventory of player to repeater named "&eRadio Function Mode" with lore "&7Current Mode: &aTRANSMITTER" and "" and "&eClick to switch to Redstone Receiver!"
+
+    else if {radio::%{_radio}%::mode} is "Receiver":
+
+        set slot 16 of current inventory of player to redstone torch named "&eRadio Function Mode" with lore "&7Current Mode: &cREDSTONE RECEIVER" and "" and "&eClick to switch to Sound Receiver!"
+
+    else:
+
+        set slot 16 of current inventory of player to jukebox named "&eRadio Function Mode" with lore "&7Current Mode: &bSOUND RECEIVER" and "" and "&eClick to switch to Transmitter!"
+
+
+
+# ============================================================
+# GUI CLEANUP
+# ============================================================
+
+on inventory close:
+
+    if name of current inventory of player is "&1Wireless Configuration":
+        delete {current_radio::%player%}
+
+
+on quit:
+
+    delete {current_radio::%player%}
+
+
+
+# ============================================================
+# RADIO ENGINE
+# ============================================================
+
+every 1 tick:
+
+    clear {active_channels::*}
+    clear {active_range::*}
+
+
+    # ========================================================
+    # PASS 1
+    # FIND ACTIVE TRANSMITTERS
+    # ========================================================
+
+    loop {radio::list::*}:
+
+        set {_radio} to loop-value
+
+
+        # ----------------------------------------------------
+        # VERIFY BASE
+        # ----------------------------------------------------
+
+        if block at {_radio} is not iron block:
+
+            if block at {_radio} is not redstone block:
+
+                remove {_radio} from {radio::list::*}
+                delete {radio::%{_radio}%::*}
+                continue
+
+
+        # ----------------------------------------------------
+        # VERIFY ANTENNA
+        # ----------------------------------------------------
+
+        set {_check} to location of block above block at {_radio}
+
+        set {_rods} to 0
+        set {_copper} to 0
+        set {_netherite} to 0
+        set {_hasRod} to false
+
+
+        while block at {_check} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+            if block at {_check} is lightning rod:
+
+                add 1 to {_rods}
+                set {_hasRod} to true
+
+            else if block at {_check} is waxed lightning rod:
+
+                add 1 to {_rods}
+                set {_hasRod} to true
+
+            else if block at {_check} is copper block:
+
+                add 1 to {_copper}
+
+            else if block at {_check} is waxed copper block:
+
+                add 1 to {_copper}
+
+            else if block at {_check} is netherite block:
+
+                add 1 to {_netherite}
+
+            add 1 to y-coordinate of {_check}
+
+
+        if {_hasRod} is false:
+            continue
+
+
+        # ----------------------------------------------------
+        # RANGE
+        # ----------------------------------------------------
+
+        set {_range} to {@base_range}
+
+        add ({_rods} * {@range_per_rod}) to {_range}
+        add ({_copper} * {@range_per_copper}) to {_range}
+        add ({_netherite} * {@range_per_netherite}) to {_range}
+
+
+        # ----------------------------------------------------
+        # TRANSMITTER
+        # ----------------------------------------------------
+
+        if {radio::%{_radio}%::mode} is "Transmitter":
+
+            set {_powered} to false
+
+            loop blocks in radius 1 around {_radio}:
+
+                # Never treat the radio's own block as an input
+                if location of loop-block is not {_radio}:
+
+                    # Lever
+                    if loop-block is lever:
+
+                        if "%block data of loop-block%" contains "powered=true":
+
+                            set {_powered} to true
+                            stop loop
+
+
+                    # Redstone wire
+                    else if loop-block is redstone wire:
+
+                        if "%block data of loop-block%" contains "power=":
+
+                            if "%block data of loop-block%" does not contain "power=0":
+
+                                set {_powered} to true
+                                stop loop
+
+
+                    # Repeater
+                    else if loop-block is repeater:
+
+                        if "%block data of loop-block%" contains "powered=true":
+
+                            set {_powered} to true
+                            stop loop
+
+
+                    # Redstone block
+                    else if loop-block is redstone block:
+
+                        set {_powered} to true
+                        stop loop
+
+
+            if {_powered} is true:
+
+                # Highest antenna block
+
+                remove 1 from y-coordinate of {_check}
+
+                play 1 shriek particle at location 1 block above {_check}
+
+                set {_frequency} to {radio::%{_radio}%::frequency}
+
+                add {_radio} to {active_channels::%{_frequency}%::*}
+
+                set {active_range::%{_radio}%} to {_range}
+
+
+
+    # ========================================================
+    # PASS 2
+    # RECEIVERS
+    # ========================================================
+
+    loop {radio::list::*}:
+
+        set {_receiver} to loop-value
+
+
+        # ----------------------------------------------------
+        # VERIFY BASE
+        # ----------------------------------------------------
+
+        if block at {_receiver} is not iron block:
+
+            if block at {_receiver} is not redstone block:
+                continue
+
+
+        # ----------------------------------------------------
+        # MODE
+        # ----------------------------------------------------
+
+        set {_mode} to {radio::%{_receiver}%::mode}
+
+        if {_mode} is "Transmitter":
+            continue
+
+
+        set {_frequency} to {radio::%{_receiver}%::frequency}
+
+        set {_shouldPower} to false
+
+
+        # ----------------------------------------------------
+        # FIND ACTIVE TRANSMITTER
+        # ----------------------------------------------------
+
+        if {active_channels::%{_frequency}%::*} is set:
+
+            loop {active_channels::%{_frequency}%::*}:
+
+                # IMPORTANT:
+                # loop-value-1 = outer radio loop
+                # loop-value-2 = transmitter loop
+
+                set {_transmitter} to loop-value-2
+
+                set {_maxDistance} to {active_range::%{_transmitter}%}
+
+                if distance between {_receiver} and {_transmitter} <= {_maxDistance}:
+
+                    set {_shouldPower} to true
+                    stop loop
+
+
+        # ----------------------------------------------------
+        # REDSTONE RECEIVER
+        # ----------------------------------------------------
+
+        if {_mode} is "Receiver":
+
+            if {_shouldPower} is true:
+
+                if block at {_receiver} is iron block:
+
+                    set block at {_receiver} to redstone block
+
+                    play sound "block.iron_trapdoor.open" with volume 0.3 to players in radius 5 around {_receiver}
+
+
+            else:
+
+                if block at {_receiver} is redstone block:
+
+                    set block at {_receiver} to iron block
+
+                    play sound "block.iron_trapdoor.close" with volume 0.3 to players in radius 5 around {_receiver}
+
+
+        # ----------------------------------------------------
+        # SOUND RECEIVER
+        # ----------------------------------------------------
+
+        else if {_mode} is "Sound Receiver":
+
+            if {_shouldPower} is true:
+
+                play sound "block.note_block.bit" with volume 1.0 and pitch 1.0 at {_receiver}
+
+                play 1 shriek particle at location 1 block above {_receiver}
+
+
+
+# ============================================================
+# LIGHTNING OVERLOAD
+# ============================================================
+
+on lightning strike:
+
+    set {_strike} to event-location
+
+
+    loop {radio::list::*}:
+
+        set {_radio} to loop-value
+
+
+        # ----------------------------------------------------
+        # VERIFY BASE
+        # ----------------------------------------------------
+
+        if block at {_radio} is not iron block:
+
+            if block at {_radio} is not redstone block:
+                continue
+
+
+        # ----------------------------------------------------
+        # FIND ANTENNA
+        # ----------------------------------------------------
+
+        set {_check} to location of block above block at {_radio}
+
+        set {_hasRod} to false
+
+
+        while block at {_check} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+            if block at {_check} is lightning rod:
+
+                set {_hasRod} to true
+
+            else if block at {_check} is waxed lightning rod:
+
+                set {_hasRod} to true
+
+            add 1 to y-coordinate of {_check}
+
+
+        if {_hasRod} is false:
+            continue
+
+
+        remove 1 from y-coordinate of {_check}
+
+
+        # ----------------------------------------------------
+        # LIGHTNING HIT
+        # ----------------------------------------------------
+
+        if distance between {_strike} and {_check} <= 1.5:
+
+            play sound "entity.generic.explode" with volume 1 and pitch 0.5 at {_radio}
+
+            play sound "block.fire.extinguish" with volume 1 and pitch 1 at {_radio}
+
+            play 20 large smoke particles at {_radio}
+
+
+            # Destroy radio
+
+            set block at {_radio} to coal block
+
+
+            # Fire around radio
+
+            loop blocks in radius 1 around {_radio}:
+
+                if y-coordinate of loop-block is y-coordinate of {_radio}:
+
+                    if loop-block is air:
+
+                        set loop-block to fire
+
+
+            # Destroy antenna
+
+            set {_cleanup} to location of block above block at {_radio}
+
+
+            while block at {_cleanup} is lightning rod or waxed lightning rod or copper block or waxed copper block or netherite block:
+
+                set block at {_cleanup} to air
+
+                add 1 to y-coordinate of {_cleanup}
+
+
+            # Remove radio
+
+            remove {_radio} from {radio::list::*}
+
+            delete {radio::%{_radio}%::*}
+
+            delete {active_range::%{_radio}%}
+
+
+            # Close GUI for players using this radio
+
+            loop all players:
+
+                if {current_radio::%loop-player%} is {_radio}:
+
+                    close loop-player's inventory
+
+                    delete {current_radio::%loop-player%}
+
+
+
+# ============================================================
+# RADIO BREAKING
+# ============================================================
+
+on break of iron block or redstone block:
+
+    set {_radio} to location of event-block
+
+
+    if {radio::list::*} contains {_radio}:
+
+        # Powered radio cannot be broken
+
+        if event-block is redstone block:
+
+            cancel event
+
+            send "{@prefix} &cYou can't break a redstone block that is bound to a radio!" to player
+
+            stop
+
+
+        # Remove radio
+
+        remove {_radio} from {radio::list::*}
+
+        delete {radio::%{_radio}%::*}
+
+        delete {active_range::%{_radio}%}
+
+
+        send "{@prefix} &cWireless system detached and frequency freed." to player

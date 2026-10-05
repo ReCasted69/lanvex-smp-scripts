@@ -1,0 +1,70 @@
+
+command /msg <player> <text>:
+    usage: /msg <player> <message>
+    trigger:
+        set {_target} to arg-1
+        set {_msg} to arg-2
+        set {_msg.mention} to false
+        set {_msg} to formatText({_msg})
+        set {_msg} to censorText({_msg})
+        set {_mention} to "@%name of {_target}%"
+        if {_msg} contains {_mention}:
+            replace all {_mention} with "<orange><underline>%{_mention}%<reset>" in {_msg}
+            set {_msg.mention} to true
+            play sound "block.note_block.bit" with pitch 1.5 to {_target}
+        if {_msg} contains "@everyone":
+            replace all "@everyone" with "<orange><underline>@everyone<reset>" in {_msg}
+            set {_msg.mention} to true
+        if {_msg} contains "@all":
+            replace all "@all" with "<orange><underline>@all<reset>" in {_msg}
+            set {_msg.mention} to true
+        set {_msg} to formatted {_msg}
+        if player's name is "{@ownername}":
+            send formatted "<dark gray><<purple>OWNER<dark gray>><<lime>YOU<dark gray>> <lime>--> <orange>%{_target}'s display name%<dark gray>> <gray>: <reset>%{_msg}%" to player
+            send formatted "<dark gray><<purple>OWNER<dark gray>><<orange>%player's display name%<dark gray>> <lime>--> <orange>YOU<dark gray>> <gray>: <reset>%{_msg}%" to {_target}
+        else if player is op:
+            send formatted "<dark gray><<light red>OP<dark gray>><<lime>YOU<dark gray>> <lime>--> <orange>%{_target}'s display name%<dark gray>> <gray>: <reset>%{_msg}%" to player
+            send formatted "<dark gray><<light red>OP<dark gray>><<orange>%player's display name%<dark gray>> <lime>--> <orange>YOU<dark gray>> <gray>: <reset>%{_msg}%" to {_target}
+        else:
+            send formatted "<dark gray><<lime>YOU<dark gray>> <lime>--> <orange>%{_target}'s display name%<dark gray>> <gray>: <reset>%{_msg}%" to player
+            send formatted "<dark gray><<orange>%player's display name%<dark gray>> <lime>--> <orange>YOU<dark gray>> <gray>: <reset>%{_msg}%" to {_target}
+        if {_msg.mention} is true:
+            if {_msg} contains "@everyone":
+                loop all players:
+                    if loop-player is not player:
+                        play sound "block.note_block.bit" with pitch 1.2 to loop-player
+            else if {_msg} contains "@all":
+                loop all players:
+                    if loop-player is not player:
+                        play sound "block.note_block.bit" with pitch 1.2 to loop-player
+
+
+command /startbackupsession:
+    permission: op
+    trigger:
+        # 5 Minutes
+        send title "<yellow>Backup in <gray>5 <yellow>minutes!" with subtitle "<italic>Get ready" to all players for 5 seconds with fade in 1 second and fade out 1 second
+        wait 4 minutes
+        
+        # 1 Minute
+        send title "<orange>Backup in <gray>1 <orange>minute!" to all players for 2 seconds
+        wait 40 seconds
+        
+        # 20 Seconds
+        send title "<red>Backup in <gray>20 <red>seconds!" to all players for 2 seconds
+        wait 10 seconds
+        
+        # 10 Seconds
+        send title "<red>Backup in <gray>10 <red>seconds!" to all players for 2 seconds
+        wait 5 seconds
+        
+        # Countdown
+        loop 5 times:
+            set {_remaining} to 6 - loop-number
+            send title "<red>Backup in <gray>%{_remaining}% <red>seconds!" to all players for 10 ticks
+            wait 1 second
+            
+        # Kick and Stop
+        send title "<red>SHUTTING DOWN" to all players for 5 seconds
+        wait 10 ticks
+        kick all players due to "<orange>Server is shutting down for backup. <lime><italic>Please rejoin in a few minutes."
