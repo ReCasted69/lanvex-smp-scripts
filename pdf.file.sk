@@ -1,0 +1,5 @@
+on spawn:
+    if event-entity is wolf:
+        set {_player} to player named "ANUBIS2783"
+        if {_player} is set:
+            tame {_player} to event-entity
